@@ -328,6 +328,24 @@ body.light .paste-a{background:var(--s2);color:var(--t2)}
     <div class="sf-r"><span class="dot dw"></span><span>158.140.x.x · 21 IPs</span></div>
     <div class="sf-r"><span class="dot dg"></span><span>Sin alertas activas</span></div>
   </div>
+  <!-- BRANDING CONFIG -->
+  <div style="padding:14px 16px;border-top:1px solid var(--b1);margin-top:auto">
+    <div style="font-family:var(--mo);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:10px">⚙ Branding PDF</div>
+    <div id="bcp-logo-prev" style="margin-bottom:8px;min-height:32px;display:flex;align-items:center">
+      <span id="bcp-logo-empty" style="font-size:9px;color:var(--t4);font-family:var(--mo)">Sin logo</span>
+      <img id="bcp-logo-img" src="" style="max-height:32px;max-width:120px;display:none;object-fit:contain">
+    </div>
+    <label class="btn bg bs" style="font-size:9px;cursor:pointer;display:block;text-align:center;margin-bottom:6px">
+      📷 Subir logo
+      <input type="file" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
+    </label>
+    <input class="fi" id="bcp-name" placeholder="Nombre empresa" style="font-size:9px;margin-bottom:4px"
+      value="Benjamín Cousiño Propiedades" oninput="saveBrand()">
+    <input class="fi" id="bcp-email" placeholder="Email" style="font-size:9px;margin-bottom:4px"
+      value="contacto@bcousinoprop.com" oninput="saveBrand()">
+    <input class="fi" id="bcp-web" placeholder="Web" style="font-size:9px"
+      value="www.bcousinoprop.com" oninput="saveBrand()">
+  </div>
 </aside>
 
 <!-- ═══ MAIN ═══ -->
@@ -961,6 +979,51 @@ const CUENTAS_DEFAULT=ACCOUNTS_RAW.map((r,i)=>({
 function saveAll(){
   try{localStorage.setItem('zinto_v4',JSON.stringify({cuentas,props,leads}))}catch(e){}
 }
+
+// ════════════════════════════════════════════════
+// BRANDING CONFIG
+// ════════════════════════════════════════════════
+function loadBrand() {
+  const logo = localStorage.getItem('bcp_logo') || '';
+  const name = localStorage.getItem('bcp_name') || 'Benjamín Cousiño Propiedades';
+  const email = localStorage.getItem('bcp_email') || 'contacto@bcousinoprop.com';
+  const web = localStorage.getItem('bcp_web') || 'www.bcousinoprop.com';
+  if ($('bcp-name')) $('bcp-name').value = name;
+  if ($('bcp-email')) $('bcp-email').value = email;
+  if ($('bcp-web')) $('bcp-web').value = web;
+  _applyLogoPreview(logo);
+}
+function saveBrand() {
+  localStorage.setItem('bcp_name', $('bcp-name')?.value || '');
+  localStorage.setItem('bcp_email', $('bcp-email')?.value || '');
+  localStorage.setItem('bcp_web', $('bcp-web')?.value || '');
+}
+function uploadBrandLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    localStorage.setItem('bcp_logo', b64);
+    _applyLogoPreview(b64);
+    showToast('✓ Logo guardado');
+  };
+  reader.readAsDataURL(file);
+}
+function _applyLogoPreview(b64) {
+  const img = $('bcp-logo-img'); const empty = $('bcp-logo-empty');
+  if (!img) return;
+  if (b64) { img.src = b64; img.style.display = 'block'; if(empty) empty.style.display='none'; }
+  else { img.style.display = 'none'; if(empty) empty.style.display='block'; }
+}
+function getBrand() {
+  return {
+    logo: localStorage.getItem('bcp_logo') || '',
+    name: localStorage.getItem('bcp_name') || 'Benjamín Cousiño Propiedades',
+    email: localStorage.getItem('bcp_email') || 'contacto@bcousinoprop.com',
+    web: localStorage.getItem('bcp_web') || 'www.bcousinoprop.com',
+  };
+}
+
 function loadAll(){
   try{
     const raw=localStorage.getItem('zinto_v4');
@@ -2528,6 +2591,7 @@ function toggleTheme(){
 })();
 // Load saved API key
 const _savedKey = getApiKey(); if (_savedKey) { const _inp = $('api-key-mo'); if(_inp) _inp.value = _savedKey; }
+loadBrand();
 renderDash();
 </script>
 <!-- LIGHTBOX -->
