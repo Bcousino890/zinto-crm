@@ -1209,6 +1209,9 @@ function renderProps(){
           <span class="pc-price">€${Number(p.pr||0).toLocaleString('es-ES')}${p.op==='Alquiler'?'/mes':''}</span>
           ${p.urlP?`<a href="${p.urlP}" target="_blank" style="font-family:var(--mo);font-size:8.5px;color:var(--bl)">→ Ver en Idealista</a>`:`<span style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">Sin publicar</span>`}
         </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn bg bs" onclick="generatePropPDF('${p.id}')" style="font-size:8.5px">📄 PDF</button>
+        </div>
       </div>`;
     }).join('')
     +`<div class="pc pc-add" onclick="openPropMo()"><div style="font-size:20px">+</div><span>Añadir propiedad</span></div>
