@@ -1254,7 +1254,7 @@ Responde ÚNICAMENTE con este JSON exacto (sin texto adicional, sin bloques de c
 
   const { txt } = await callClaude({
     messages: [{ role: 'user', content: prompt }],
-    max_tokens: 4000,
+    max_tokens: 1500,
     tools: [{ type: 'web_search_20250305', name: 'web_search' }]
   });
 
@@ -1556,7 +1556,7 @@ async function doAutoFill() {
 
     const { txt } = await callClaude({
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000,
+      max_tokens: 600,
       tools: [{ type: 'web_search_20250305', name: 'web_search' }]
     });
     const jm = txt.match(/\{[\s\S]*"m2"[\s\S]*\}/);
@@ -1688,7 +1688,8 @@ Responde ÚNICAMENTE con el texto de la descripción, sin títulos, sin comillas
   try {
     const { txt: text } = await callClaude({
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 800
+      max_tokens: 800,
+      model: 'claude-sonnet-4-20250514'
     });
     ta.value = text.trim();
     showToast('✓ Descripción generada · Revísala y edítala si quieres');
@@ -2465,11 +2466,11 @@ async function testApiKey() {
 // ════════════════════════════════════════════════
 // CALL CLAUDE — via proxy (sin CORS)
 // ════════════════════════════════════════════════
-async function callClaude({ messages, max_tokens = 2000, tools = null }) {
+async function callClaude({ messages, max_tokens = 600, tools = null, model = 'claude-haiku-4-5-20251001' }) {
   const key = getApiKey();
   if (!key) throw new Error('⚠ No hay API key. Pégala en la pestaña "🤖 API Key" del formulario (sk-ant-api03-...)');
 
-  const body = { model: 'claude-sonnet-4-20250514', max_tokens, messages };
+  const body = { model, max_tokens, messages };
   if (tools) body.tools = tools;
 
   const res = await fetch(getProxyUrl(), {
