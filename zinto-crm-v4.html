@@ -2206,7 +2206,7 @@ function generatePropPDF(propId) {
   ].filter(Boolean);
   const IMG_PROXY = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
   const foto = p.images && p.images[0] ? IMG_PROXY + encodeURIComponent(p.images[0]) : '';
-  const desc = (p.desc || '').replace(/\n/g, '<br>');
+  const desc = esc(p.desc || '').replace(/\n/g, '<br>');
 
   // Logo HTML
   const logoHtml = brand.logo
