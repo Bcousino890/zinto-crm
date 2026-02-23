@@ -2180,6 +2180,141 @@ function exportPropsPDF(){
   showToast('✓ Abierto · Usa "Imprimir" \u2192 "Guardar como PDF"');
 }
 
+
+// ════════════════════════════════════════════════
+// PDF FICHA DE PROPIEDAD
+// ════════════════════════════════════════════════
+function generatePropPDF(propId) {
+  const p = props.find(x => x.id === propId);
+  if (!p) { showToast('⚠ Propiedad no encontrada'); return; }
+  const brand = getBrand();
+  const cnt = cuentas.find(c => c.id === p.cId);
+
+  // Datos
+  const precio = Number(p.pr || 0).toLocaleString('es-ES');
+  const precioStr = `€${precio}${p.op === 'Alquiler' ? '/mes' : ''}`;
+  const ubicacion = [p.via ? p.via + (p.num ? ' ' + p.num : '') : '', p.barrio, p.loc].filter(Boolean).join(' · ');
+  const planta = p.planta && p.planta !== 'Selecciona' ? p.planta : '';
+  const extras = [
+    p.asc && p.asc !== 'No' ? 'Ascensor' : '',
+    p.eq || '',
+    p.fc || '',
+    p.cal || '',
+    p.en ? 'Cert. ' + p.en : '',
+    ...(p.extras || []),
+    ...(p.orient || []),
+  ].filter(Boolean);
+  const IMG_PROXY = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
+  const foto = p.images && p.images[0] ? IMG_PROXY + encodeURIComponent(p.images[0]) : '';
+  const desc = (p.desc || '').replace(/\n/g, '<br>');
+
+  // Logo HTML
+  const logoHtml = brand.logo
+    ? `<img src="${brand.logo}" style="max-height:38px;max-width:140px;object-fit:contain" alt="logo">`
+    : `<span style="font-size:13px;font-weight:700;color:#0d1a26;letter-spacing:-.3px">${esc(brand.name)}</span>`;
+
+  // Foto HTML
+  const fotoHtml = foto
+    ? `<div class="hero" style="background-image:url('${foto}')"></div>`
+    : `<div class="hero hero-empty"><span>${esc(brand.name)}</span></div>`;
+
+  // Chips
+  const chipsData = [
+    { label: p.tipo || 'Piso', color: '#0d1a26' },
+    { label: p.op || 'Alquiler', color: '#0d1a26' },
+    p.m2 ? { label: (p.m2u || p.m2) + ' m²', color: '#0d5c42' } : null,
+    p.h ? { label: p.h + ' hab', color: '#0d5c42' } : null,
+    p.b ? { label: p.b + ' baño' + (Number(p.b) > 1 ? 's' : ''), color: '#0d5c42' } : null,
+    planta ? { label: 'Planta ' + planta, color: '#334455' } : null,
+  ].filter(Boolean);
+  const chipsHtml = chipsData.map(c =>
+    `<span style="background:${c.color};color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap">${esc(c.label)}</span>`
+  ).join('');
+
+  // Extras tags
+  const extrasHtml = extras.length
+    ? extras.map(e => `<span class="extra-tag">✓ ${esc(e)}</span>`).join('')
+    : '';
+
+  const css = `
+    *{box-sizing:border-box;margin:0;padding:0}
+    @page{size:A4 portrait;margin:0}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#1a1a1a;background:#fff;width:210mm;min-height:297mm;padding:0}
+    .page{width:210mm;min-height:297mm;padding:14mm 14mm 10mm;display:flex;flex-direction:column}
+    .header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2px solid #0d1a26;margin-bottom:12px}
+    .header-right{text-align:right}
+    .co-name{font-size:11px;font-weight:700;color:#0d1a26;letter-spacing:-.2px}
+    .ref-tag{font-size:8.5px;color:#888;font-family:monospace;margin-top:2px}
+    .hero{width:100%;height:195px;background-size:cover;background-position:center;border-radius:6px;margin-bottom:14px;flex-shrink:0}
+    .hero-empty{background:#e8ecf0;display:flex;align-items:center;justify-content:center}
+    .hero-empty span{font-size:14px;color:#aaa;font-weight:600;letter-spacing:.5px}
+    .precio{font-size:24px;font-weight:800;color:#00a07a;margin-bottom:8px;letter-spacing:-.5px}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .ubicacion{font-size:11px;color:#555;margin-bottom:12px;padding-left:16px;position:relative}
+    .ubicacion::before{content:"📍";position:absolute;left:0}
+    .desc{font-size:10.5px;color:#2a2a2a;line-height:1.65;margin-bottom:12px;flex:1}
+    .extras{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+    .extra-tag{font-size:9.5px;color:#0d5c42;background:#e8f7f2;padding:3px 9px;border-radius:12px;font-weight:500}
+    .footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #e8ecf0;margin-top:auto}
+    .footer-contact{font-size:10px;color:#555;display:flex;gap:18px}
+    .footer-web{font-size:9.5px;color:#aaa;font-family:monospace}
+    .btn-print{margin-top:0;padding:10px 28px;background:#0d1a26;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.2px}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}}
+  `;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width">
+  <title>Ficha · ${esc(p.tipo || 'Propiedad')} · ${esc(ubicacion)}</title>
+  <style>${css}</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>${logoHtml}</div>
+    <div class="header-right">
+      <div class="co-name">${esc(brand.name)}</div>
+      ${p.ref ? `<div class="ref-tag">REF ${esc(p.ref)}</div>` : ''}
+    </div>
+  </div>
+
+  ${fotoHtml}
+
+  <div class="precio">${precioStr}</div>
+  <div class="chips">${chipsHtml}</div>
+  ${ubicacion ? `<div class="ubicacion">${esc(ubicacion)}</div>` : ''}
+
+  <div class="desc">${desc || '<em style="color:#aaa">Sin descripción</em>'}</div>
+
+  ${extrasHtml ? `<div class="extras">${extrasHtml}</div>` : ''}
+
+  <div class="footer">
+    <div class="footer-contact">
+      <span>✉ ${esc(brand.email)}</span>
+      ${cnt && cnt.tel ? `<span>📞 ${esc(cnt.tel)}</span>` : ''}
+    </div>
+    <div class="footer-web">${esc(brand.web)}</div>
+  </div>
+</div>
+
+<div class="no-print" style="text-align:center;padding:16px">
+  <button class="btn-print" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+  showToast('📄 Ficha abierta · Ctrl+P para guardar como PDF');
+}
+
 // ════════════════════════════════════════════════
 // FILE IMPORT (CSV / TXT)
 // ════════════════════════════════════════════════
