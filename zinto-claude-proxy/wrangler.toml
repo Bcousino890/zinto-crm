@@ -1,0 +1,4 @@
+name = "zinto-claude-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+account_id = "bdff58d4a8d372fe02101f5259bd16b8"

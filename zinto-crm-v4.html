@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zinto CRM · Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070a0e;--s1:#0c1118;--s2:#111820;--s3:#16202c;
+  --b1:#1e2d3d;--b2:#263548;--b3:#304258;
+  --ac:#00d4a0;--acd:rgba(0,212,160,.1);--acb:rgba(0,212,160,.25);
+  --bl:#3b82f6;--bld:rgba(59,130,246,.1);
+  --wn:#f59e0b;--wnd:rgba(245,158,11,.1);
+  --rd:#ef4444;--rdd:rgba(239,68,68,.1);
+  --pu:#a855f7;--pud:rgba(168,85,247,.1);
+  --t1:#dde6f0;--t2:#8ba3b8;--t3:#4a6278;--t4:#2d4055;
+  --fn:'Geist','Syne',sans-serif;--mo:'Geist Mono','DM Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;-webkit-font-smoothing:antialiased}
+body::after{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,160,.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,160,.015) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;display:flex;height:100vh}
+
+/* ── SIDEBAR ── */
+.sb{width:230px;min-width:230px;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--b1)}
+.sb-tag{font-family:var(--mo);font-size:8px;color:var(--ac);letter-spacing:.28em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.sb-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac);animation:pulse 2s infinite}
+.sb-name{font-size:16px;font-weight:800;letter-spacing:-.03em}.sb-name span{color:var(--ac)}
+.sb-meta{font-family:var(--mo);font-size:8.5px;color:var(--t4);margin-top:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav{flex:1;padding:10px 7px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.nl{font-family:var(--mo);font-size:7.5px;color:var(--t4);letter-spacing:.22em;text-transform:uppercase;padding:11px 10px 4px;margin-top:4px}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:500;color:var(--t3);transition:all .12s;border:1px solid transparent;position:relative;user-select:none}
+.ni:hover{background:var(--s2);color:var(--t2)}
+.ni.on{background:var(--acd);color:var(--ac);border-color:rgba(0,212,160,.18)}
+.ni.on::before{content:'';position:absolute;left:-7px;top:50%;transform:translateY(-50%);width:3px;height:52%;background:var(--ac);border-radius:0 2px 2px 0}
+.ni-ic{font-size:12px;width:16px;text-align:center}
+.nb{margin-left:auto;font-size:8px;font-family:var(--mo);padding:1px 6px;border-radius:10px}
+.nb-r{background:var(--rdd);color:var(--rd)}.nb-g{background:var(--acd);color:var(--ac)}.nb-w{background:var(--wnd);color:var(--wn)}
+.sb-foot{padding:11px 14px;border-top:1px solid var(--b1)}
+.sf-l{font-family:var(--mo);font-size:7.5px;color:var(--t4);letter-spacing:.18em;text-transform:uppercase;margin-bottom:7px}
+.sf-r{display:flex;align-items:center;gap:6px;font-family:var(--mo);font-size:9px;color:var(--t3);margin-bottom:4px}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dg{background:var(--ac);box-shadow:0 0 5px var(--ac);animation:pulse 2s infinite}
+.dw{background:var(--wn)}.dr{background:var(--rd)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-bottom:1px solid var(--b1);background:var(--s1);flex-shrink:0}
+.tb-l{display:flex;flex-direction:column}
+.tb-t{font-size:15px;font-weight:800;letter-spacing:-.03em}
+.tb-s{font-family:var(--mo);font-size:8px;color:var(--t4);margin-top:2px}
+.tb-r{display:flex;gap:7px;align-items:center}
+.content{flex:1;overflow-y:auto;padding:22px 26px}
+
+/* ── BUTTONS ── */
+.btn{padding:6px 14px;border-radius:7px;font-size:10.5px;font-weight:600;font-family:var(--fn);cursor:pointer;border:none;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bg{background:transparent;border:1px solid var(--b1);color:var(--t3)}.bg:hover:not(:disabled){border-color:var(--b3);color:var(--t1)}
+.bp{background:var(--ac);color:var(--bg)}.bp:hover:not(:disabled){background:#00f0b5;transform:translateY(-1px)}
+.bb{background:var(--bld);color:var(--bl);border:1px solid rgba(59,130,246,.3)}.bb:hover{background:rgba(59,130,246,.18)}
+.br{background:var(--rdd);color:var(--rd);border:1px solid rgba(239,68,68,.3)}
+.bw{background:var(--wnd);color:var(--wn);border:1px solid rgba(245,158,11,.3)}
+.bs{padding:4px 10px;font-size:9.5px}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.on{display:block;animation:fu .18s ease}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.sc-g::after{background:linear-gradient(90deg,var(--ac),transparent)}
+.sc-b::after{background:linear-gradient(90deg,var(--bl),transparent)}
+.sc-w::after{background:linear-gradient(90deg,var(--wn),transparent)}
+.sc-r::after{background:linear-gradient(90deg,var(--rd),transparent)}
+.sc-lb{font-family:var(--mo);font-size:7.5px;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.sc-v{font-size:26px;font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:3px}
+.sc-s{font-family:var(--mo);font-size:8.5px;color:var(--t3)}
+.sc-ic{position:absolute;top:12px;right:14px;font-size:18px;opacity:.1}
+
+/* ── CARD ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b1)}
+.card-t{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.card-a{font-family:var(--mo);font-size:8px;color:var(--ac);cursor:pointer}.card-a:hover{text-decoration:underline}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-family:var(--mo);font-size:7.5px;color:var(--t4);letter-spacing:.18em;text-transform:uppercase;text-align:left;padding:8px 13px;border-bottom:1px solid var(--b1);font-weight:400;white-space:nowrap}
+.tbl td{padding:9px 13px;font-size:10.5px;border-bottom:1px solid rgba(30,44,56,.5);color:var(--t2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.012)}
+.tbl td strong{color:var(--t1);font-weight:600}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:3px;font-family:var(--mo);font-size:8px;padding:2px 7px;border-radius:4px;white-space:nowrap;font-weight:500}
+.cg{background:var(--acd);color:var(--ac)}.cb{background:var(--bld);color:var(--bl)}
+.cw{background:var(--wnd);color:var(--wn)}.cr{background:var(--rdd);color:var(--rd)}
+.cp{background:var(--pud);color:var(--pu)}.cgr{background:rgba(30,44,56,.7);color:var(--t3)}
+
+/* ── SLOTS ── */
+.slots{display:flex;gap:3px;align-items:center}
+.slot{width:20px;height:6px;border-radius:2px;border:1px solid var(--b2)}
+.slot.u{background:var(--ac);border-color:var(--ac)}.slot.f{background:var(--rd);border-color:var(--rd)}.slot.e{background:var(--s3)}
+.sl-l{font-family:var(--mo);font-size:8px;color:var(--t4);margin-left:4px}
+
+/* ── MODAL ── */
+.mo-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.mo-ov.open{display:flex}
+.mo{background:var(--s1);border:1px solid var(--b2);border-radius:13px;width:780px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:fu .2s ease;position:relative}
+.mo-h{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:5}
+.mo-title{font-size:13px;font-weight:700}
+.mo-x{cursor:pointer;font-size:18px;color:var(--t4);padding:3px 6px;border-radius:5px}.mo-x:hover{color:var(--t1);background:var(--s2)}
+.mo-body{padding:20px}
+.mo-foot{padding:12px 20px;border-top:1px solid var(--b1);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--s1)}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px}
+.fl{font-family:var(--mo);font-size:7.5px;color:var(--t4);letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;display:block}
+.fi{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:7px 11px;font-size:11.5px;color:var(--t1);font-family:var(--mo);outline:none;transition:border-color .12s}
+.fi:focus{border-color:var(--ac)}.fi::placeholder{color:var(--t4)}.fi:read-only{opacity:.5;cursor:default}
+.fsel{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:7px 11px;font-size:11.5px;color:var(--t1);font-family:var(--mo);outline:none;cursor:pointer;appearance:none}
+.fta{resize:vertical;min-height:72px;line-height:1.55;font-family:var(--fn);font-size:12px}
+.frow{display:grid;gap:10px}
+.fr2{grid-template-columns:1fr 1fr}.fr3{grid-template-columns:1fr 1fr 1fr}.fr4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+/* RADIO/CHECK */
+.rg{display:flex;flex-wrap:wrap;gap:5px}
+.rg-i{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--t2);padding:4px 9px;border:1px solid var(--b1);border-radius:6px;transition:all .12s;user-select:none}
+.rg-i:hover{border-color:var(--b3);color:var(--t1)}
+.rg-i.sel{border-color:var(--ac);background:var(--acd);color:var(--ac)}
+.rg-i input{display:none}
+
+/* DIVIDER */
+.sdiv{font-size:9px;font-weight:700;color:var(--t4);display:flex;align-items:center;gap:10px;margin:18px 0 11px;letter-spacing:.08em;text-transform:uppercase}
+.sdiv::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* URL BOX */
+.url-box{background:linear-gradient(135deg,rgba(0,212,160,.07),rgba(59,130,246,.04));border:1px solid rgba(0,212,160,.25);border-radius:10px;padding:14px;margin-bottom:16px}
+.url-box-lbl{font-family:var(--mo);font-size:8px;color:var(--ac);margin-bottom:9px;letter-spacing:.1em;display:flex;align-items:center;gap:7px}
+.url-row{display:flex;gap:8px}
+.url-inp{flex:1;background:var(--bg);border:1px solid var(--b2);border-radius:7px;padding:8px 12px;font-size:11.5px;color:var(--t1);font-family:var(--mo);outline:none}
+.url-inp:focus{border-color:var(--ac)}
+.url-st{font-family:var(--mo);font-size:8.5px;margin-top:7px;min-height:14px}
+.url-st.ok{color:var(--ac)}.url-st.err{color:var(--rd)}.url-st.ld{color:var(--wn)}
+
+/* PROGRESS BAR */
+.pb{height:3px;background:var(--b1);border-radius:2px;overflow:hidden;margin-top:7px}
+.pf{height:100%;background:linear-gradient(90deg,var(--ac),var(--bl));border-radius:2px;width:0;transition:width .4s ease}
+
+/* AI DESCRIPTION BOX */
+.ai-box{background:rgba(0,212,160,.05);border:1px solid rgba(0,212,160,.18);border-radius:9px;padding:13px}
+.ai-box-lbl{font-family:var(--mo);font-size:8px;color:var(--ac);margin-bottom:7px;letter-spacing:.1em;display:flex;align-items:center;gap:8px}
+.ai-spin{width:13px;height:13px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PROP GRID */
+.prop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:13px}
+.pc{background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px;cursor:pointer;transition:border-color .15s}
+.pc:hover{border-color:rgba(0,212,160,.3)}
+.pc-img{width:100%;height:78px;object-fit:cover;border-radius:5px;margin-bottom:8px}
+.pc-ref{font-family:var(--mo);font-size:7.5px;color:var(--t4);margin-bottom:3px}
+.pc-t{font-size:11.5px;font-weight:700;margin-bottom:2px;line-height:1.3}
+.pc-l{font-size:10px;color:var(--t3);margin-bottom:7px}
+.pc-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.pc-foot{display:flex;justify-content:space-between;align-items:center}
+.pc-price{font-size:13px;font-weight:800;color:var(--ac)}
+.pc-add{border-style:dashed;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-height:110px;color:var(--t4);font-size:11px}
+.pc-add:hover{border-color:rgba(0,212,160,.4);color:var(--ac)}
+
+/* LEADS */
+.lead-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .1s}
+.lead-item:last-child{border-bottom:none}
+.lead-item:hover{background:rgba(255,255,255,.012)}
+.lead-item.ag{opacity:.38}.lead-item.ag:hover{opacity:.7}
+.lead-av{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.lead-body{flex:1;min-width:0}
+.lead-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;gap:8px}
+.lead-nm{font-size:11.5px;font-weight:600;color:var(--t1)}
+.lead-r{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.lead-tm{font-family:var(--mo);font-size:8px;color:var(--t4)}
+.lead-pr{font-size:10px;color:var(--t2);margin-bottom:2px}
+.lead-ms{font-size:9.5px;color:var(--t4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:450px}
+.udot{width:5px;height:5px;border-radius:50%;background:var(--bl);flex-shrink:0;margin-top:9px}
+.ag-banner{background:var(--rdd);border:1px solid rgba(239,68,68,.25);border-radius:7px;padding:9px 13px;margin-bottom:12px;display:none;align-items:center;gap:9px;font-size:11px;color:var(--rd)}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:5px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.fb-t{padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--b1);color:var(--t3);transition:all .12s;user-select:none}
+.fb-t:hover{border-color:var(--b2);color:var(--t2)}
+.fb-t.on{background:var(--acd);border-color:rgba(0,212,160,.3);color:var(--ac)}
+.fb-t.on.warn{background:var(--wnd);border-color:rgba(245,158,11,.3);color:var(--wn)}
+.fb-t.on.red{background:var(--rdd);border-color:rgba(239,68,68,.3);color:var(--rd)}
+.fb-sep{width:1px;height:18px;background:var(--b1);margin:0 3px}
+
+/* IMPORT */
+.drop-z{border:2px dashed var(--b2);border-radius:9px;padding:26px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:12px}
+.drop-z:hover,.drop-z.drag{border-color:var(--ac);background:var(--acd)}
+.paste-a{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px;font-family:var(--mo);font-size:10px;color:var(--t2);min-height:110px;resize:vertical;outline:none;line-height:1.6}
+.paste-a:focus{border-color:var(--ac)}
+
+/* IMAGE EXTRACTOR */
+.img-grid-ext{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:14px}
+.img-th{position:relative;border-radius:10px;overflow:hidden;background:var(--s2);border:3px solid transparent;cursor:pointer;transition:all .15s;aspect-ratio:4/3}
+.img-th:hover{border-color:rgba(0,212,160,.5);transform:scale(1.02);z-index:2}
+.img-th.sel{border-color:#22c55e;box-shadow:0 0 0 1px #22c55e}
+.img-th img{width:100%;height:100%;object-fit:cover;display:block}
+.img-th-n{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.72);font-family:var(--mo);font-size:10px;font-weight:600;color:#fff;padding:3px 9px;border-radius:20px;letter-spacing:.02em;backdrop-filter:blur(2px)}
+.img-th .img-open{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 7px;font-size:9px;color:#fff;text-decoration:none;opacity:0;transition:opacity .15s}
+.img-th:hover .img-open{opacity:1}
+.sel-ck{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:50%;background:#22c55e;color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 0 2px rgba(255,255,255,.4)}
+.img-th.sel .sel-ck{display:flex}
+.img-th:not(.sel)::before{content:'';position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.65);pointer-events:none;backdrop-filter:blur(1px)}
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#lightbox.open{display:flex}
+#lightbox-img{max-width:92vw;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)}
+#lightbox-info{font-family:var(--mo);font-size:10px;color:var(--t3);text-align:center;margin-top:4px}
+#lightbox-nav{display:flex;gap:14px;align-items:center;margin-top:4px}
+#lightbox-nav button{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);color:var(--t1);font-family:var(--mo);font-size:12px;padding:7px 18px;border-radius:7px;cursor:pointer}
+#lightbox-nav button:hover{background:rgba(255,255,255,.18)}
+#lightbox-close{position:absolute;top:14px;right:18px;background:none;border:none;color:var(--t2);font-size:24px;cursor:pointer;line-height:1;padding:4px}
+#lightbox-url{font-family:var(--mo);font-size:8px;color:var(--t4);word-break:break-all;max-width:80vw;text-align:center;cursor:pointer;margin-top:2px}
+#lightbox-url:hover{color:var(--ac);text-decoration:underline}
+#lightbox-sel-btn{background:var(--acd);border:1px solid var(--acb);color:var(--ac);font-family:var(--mo);font-size:9px;padding:5px 14px;border-radius:6px;cursor:pointer;margin-top:2px}
+
+/* IMAGE UPLOAD IN FORM */
+.img-upload-area{border:2px dashed var(--b2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:10px}
+.img-upload-area:hover{border-color:var(--ac);background:var(--acd)}
+.img-prev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px;margin-top:8px}
+.img-prev-item{position:relative;border-radius:5px;overflow:hidden;aspect-ratio:4/3;background:var(--s3)}
+.img-prev-item img{width:100%;height:100%;object-fit:cover}
+.img-prev-rm{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:var(--rd);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;font-weight:700}
+.img-prev-item:hover .img-prev-rm{opacity:1}
+
+/* LOADING OVERLAY */
+.load-ov{position:absolute;inset:0;background:rgba(7,10,14,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:13px;z-index:10;border-radius:13px}
+.load-ov.show{display:flex}
+.load-t{font-family:var(--mo);font-size:10.5px;color:var(--ac);letter-spacing:.05em;text-align:center;padding:0 20px}
+.ldots{display:flex;gap:5px}
+.ldots span{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:bounce .8s ease infinite}
+.ldots span:nth-child(2){animation-delay:.15s}.ldots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--ac);border-radius:9px;padding:10px 16px;font-size:11px;color:var(--ac);font-family:var(--mo);z-index:300;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:320px}
+.toast.show{display:block;animation:fu .2s ease}
+
+/* DASHBOARD GRID */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col-full{grid-column:1/-1}
+
+/* COPY FIELD */
+.copy-f{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:6px 10px;margin-bottom:5px}
+.copy-v{font-family:var(--mo);font-size:9.5px;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-b{font-size:8px;color:var(--ac);cursor:pointer;padding:2px 7px;border-radius:3px;border:1px solid rgba(0,212,160,.3);background:var(--acd);flex-shrink:0}
+.copy-b:hover{background:rgba(0,212,160,.2)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ── LIGHT MODE ── */
+body.light{
+  --bg:#f8fafc;--s1:#ffffff;--s2:#f1f5f9;--s3:#e8edf3;
+  --b1:#e2e8f0;--b2:#cbd5e1;--b3:#94a3b8;
+  --ac:#009e75;--acd:rgba(0,158,117,.09);--acb:rgba(0,158,117,.22);
+  --bl:#2563eb;--bld:rgba(37,99,235,.09);
+  --wn:#d97706;--wnd:rgba(217,119,6,.09);
+  --rd:#dc2626;--rdd:rgba(220,38,38,.09);
+  --pu:#9333ea;--pud:rgba(147,51,234,.09);
+  --t1:#0f172a;--t2:#334155;--t3:#64748b;--t4:#94a3b8;
+  background:var(--bg);color:var(--t1);
+}
+body.light::after{background-image:none}
+body.light .tbl tr:hover td{background:rgba(0,0,0,.025)}
+body.light .tbl td{border-bottom-color:rgba(226,232,240,.7)}
+body.light .mo-ov{background:rgba(15,23,42,.45)}
+body.light .load-ov{background:rgba(241,245,249,.94);color:var(--t1)}
+body.light .load-t{color:var(--ac)}
+body.light .ldots span{background:var(--ac)}
+body.light .bp{color:#fff}
+body.light .bp:hover:not(:disabled){background:#00b884}
+body.light .sc-ic{opacity:.08}
+body.light .url-inp{background:var(--s1);color:var(--t1)}
+body.light .paste-a{background:var(--s2);color:var(--t2)}
+
+#file-in,#img-in{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-tag">CRM · Idealista</div>
+    <div class="sb-name">Zinto <span>Control</span></div>
+    <div class="sb-meta" id="sb-meta">20 cuentas · 40 slots máx.</div>
+  </div>
+  <nav class="nav">
+    <span class="nl">Principal</span>
+    <div class="ni on" onclick="go(this,'dash')"><span class="ni-ic">⬡</span>Dashboard</div>
+    <div class="ni" onclick="go(this,'cuentas')"><span class="ni-ic">👤</span>Cuentas &amp; IPs<span class="nb nb-g" id="nb-c">20</span></div>
+    <span class="nl">Propiedades</span>
+    <div class="ni" onclick="go(this,'props')"><span class="ni-ic">🏠</span>Inventario<span class="nb nb-g" id="nb-p">0</span></div>
+    <div class="ni" onclick="openPropMo()"><span class="ni-ic">＋</span>Nueva Propiedad</div>
+    <span class="nl">Imágenes</span>
+    <div class="ni" onclick="go(this,'imgs')"><span class="ni-ic">🖼</span>Extractor Imágenes</div>
+    <span class="nl">Leads</span>
+    <div class="ni" onclick="go(this,'leads')"><span class="ni-ic">✉</span>Bandeja Leads<span class="nb nb-r" id="nb-l">0</span></div>
+    <div class="ni" onclick="go(this,'import')"><span class="ni-ic">⬆</span>Importar Leads</div>
+    <span class="nl">Acceso</span>
+    <div class="ni" onclick="go(this,'login')"><span class="ni-ic">🔑</span>Guía Login</div>
+  </nav>
+  <div class="sb-foot">
+    <div class="sf-l">Estado</div>
+    <div class="sf-r"><span class="dot dg"></span><span>AS5511 · Naranja SA 🇪🇸</span></div>
+    <div class="sf-r"><span class="dot dw"></span><span>158.140.x.x · 21 IPs</span></div>
+    <div class="sf-r"><span class="dot dg"></span><span>Sin alertas activas</span></div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="tb-l">
+      <div class="tb-t" id="pg-t">Dashboard General</div>
+      <div class="tb-s" id="pg-s">Gestión multi-cuenta · Idealista particulares</div>
+    </div>
+    <div class="tb-r">
+      <button class="btn bg" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema claro/oscuro">🌙</button>
+      <button class="btn bg" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn bb" onclick="go(document.querySelector('[onclick*=import]'),'import')">⬆ Importar</button>
+      <button class="btn bp" onclick="openPropMo()">＋ Nueva Propiedad</button>
+    </div>
+  </div>
+  <div class="content">
+
+  <!-- DASHBOARD -->
+  <div id="panel-dash" class="panel on">
+    <div class="stats-row">
+      <div class="sc sc-g"><div class="sc-ic">👤</div><div class="sc-lb">Cuentas</div><div class="sc-v" id="d-c">20</div><div class="sc-s" id="d-cs">16 activas · 4 pendientes</div></div>
+      <div class="sc sc-b"><div class="sc-ic">🏠</div><div class="sc-lb">Propiedades</div><div class="sc-v" id="d-p">0</div><div class="sc-s" id="d-ps">0 / 40 slots</div></div>
+      <div class="sc sc-w"><div class="sc-ic">✉</div><div class="sc-lb">Leads Reales</div><div class="sc-v" id="d-l">0</div><div class="sc-s" id="d-ls">0 pendientes</div></div>
+      <div class="sc sc-r"><div class="sc-ic">🚫</div><div class="sc-lb">Agencias Filtradas</div><div class="sc-v" id="d-a">0</div><div class="sc-s">Descartadas auto.</div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-h"><div class="card-t">👤 Cuentas · Slots</div><span class="card-a" onclick="go(document.querySelector('[onclick*=cuentas]'),'cuentas')">Ver todas →</span></div>
+        <div id="d-tbl" style="overflow-x:auto"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div class="card-t">📊 Ocupación Slots</div></div>
+        <div id="d-chart" style="padding:13px 15px"></div>
+      </div>
+      <div class="card col-full">
+        <div class="card-h"><div class="card-t">✉ Últimos Leads Reales</div><span class="card-a" onclick="go(document.querySelector('[onclick*=leads]'),'leads')">Ver todos →</span></div>
+        <div id="d-ll"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUENTAS -->
+  <div id="panel-cuentas" class="panel">
+    <div class="card">
+      <div class="card-h">
+        <div class="card-t">👤 Cuentas · IPs Asignadas en Orden</div>
+        <button class="btn bp bs" onclick="openCuentaMo()">+ Cuenta</button>
+      </div>
+      <div style="overflow-x:auto"><table class="tbl" id="c-tbl"></table></div>
+    </div>
+  </div>
+
+  <!-- PROPIEDADES -->
+  <div id="panel-props" class="panel">
+    <div class="card">
+      <div class="card-h">
+        <div class="card-t">🏠 Inventario de Propiedades</div>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <input class="fi" id="p-search" placeholder="Buscar propiedades…" style="width:200px;padding:4px 9px;font-size:10px" oninput="renderProps()">
+          <span id="p-lbl" style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">0 propiedades</span>
+          <button class="btn bg bs" onclick="exportPropsPDF()">📄 PDF</button>
+          <button class="btn bp bs" onclick="openPropMo()">+ Nueva</button>
+        </div>
+      </div>
+      <div id="p-grid"></div>
+    </div>
+  </div>
+
+  <!-- EXTRACTOR IMÁGENES -->
+  <div id="panel-imgs" class="panel">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-h"><div class="card-t">🖼 Extractor de Imágenes · extractAndNormalizeImages()</div></div>
+      <div style="padding:16px">
+        <!-- EXTRACTOR TABS -->
+        <div style="display:flex;gap:5px;margin-bottom:13px">
+          <div class="af-tab on" id="etab-paste" onclick="switchExtTab('paste')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(0,212,160,.3);background:var(--acd);color:var(--ac);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
+            📋 Pegar URLs manualmente<br><span style="font-size:7.5px;opacity:.7">Sin API · Copia las URLs tú mismo</span>
+          </div>
+          <div class="af-tab" id="etab-api" onclick="switchExtTab('api')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
+            🤖 Extraer con API IA<br><span style="font-size:7.5px;opacity:.7">Requiere API key propia</span>
+          </div>
+        </div>
+
+        <!-- PASTE MODE -->
+        <div id="ext-paste-mode">
+          <div style="font-family:var(--mo);font-size:8px;color:var(--t3);margin-bottom:7px">
+            Abre el anuncio → clic derecho en cada foto → "Copiar dirección de imagen" → pega una URL por línea:
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <select class="fsel" id="ext-src-p" style="width:130px;appearance:none">
+              <option value="idealista">Idealista</option>
+              <option value="fotocasa">Fotocasa</option>
+              <option value="inmoweb">Inmoweb</option>
+              <option value="mobilia">Mobilia</option>
+            </select>
+            <input class="fi" id="ext-listing-url" placeholder="URL del anuncio (opcional, para el JSON)" style="flex:1;font-size:10px"/>
+          </div>
+          <textarea class="fi" id="ext-paste-urls" style="min-height:110px;font-size:9.5px;font-family:var(--mo);line-height:1.7;margin-bottom:8px"
+            placeholder="Pega las URLs de las imágenes, una por línea:
+
+https://img4.idealista.com/blur/WEB_DETAIL/0/id.pro/...
+https://img4.idealista.com/blur/WEB_DETAIL/0/id.pro/...
+https://img4.idealista.com/blur/WEB_DETAIL/0/id.pro/...
+
+Se normalizarán automáticamente según la fuente."></textarea>
+          <button class="btn bp" onclick="parsePastedUrls()" style="width:100%">⚙ Normalizar y Procesar URLs</button>
+          <div class="url-st" id="ext-st"></div>
+        </div>
+
+        <!-- API MODE -->
+        <div id="ext-api-mode" style="display:none">
+          <div class="fg">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input class="fi" id="ext-url" placeholder="https://www.idealista.com/inmueble/XXXXXXXX/" style="flex:1;min-width:280px"/>
+              <select class="fsel" id="ext-src" style="width:145px;appearance:none">
+                <option value="idealista">Idealista</option>
+                <option value="fotocasa">Fotocasa</option>
+                <option value="inmoweb">Inmoweb</option>
+                <option value="mobilia">Mobilia</option>
+              </select>
+              <button class="btn bp" onclick="doExtractImages()" id="btn-ext">🤖 Extraer con IA</button>
+            </div>
+            <div class="url-st" id="ext-st-api"></div>
+            <div class="pb" id="ext-pb" style="display:none"><div class="pf" id="ext-pf"></div></div>
+          </div>
+        </div>
+
+        <div id="ext-results" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 10px;flex-wrap:wrap;gap:8px">
+            <div style="font-family:var(--mo);font-size:9px;color:var(--t4)">
+              <span id="ext-cnt" style="color:var(--ac);font-size:16px;font-weight:800">0</span> imágenes extraídas ·
+              <span id="ext-src-lbl" style="color:var(--t3)">fuente</span>
+            </div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <button class="btn bg bs" onclick="selAll()">☑ Todas</button>
+              <button class="btn bg bs" onclick="selNone()">☐ Ninguna</button>
+              <button class="btn bg bs" onclick="copyExtUrls()">📋 Copiar URLs</button>
+              <button class="btn bp bs" onclick="downloadSel()">⬇ Descargar Sel.</button>
+            </div>
+          </div>
+          <div class="img-grid-ext" id="ext-grid"></div>
+          <div id="ext-prop-bar" style="display:none;margin:0 12px 12px;background:var(--acd);border:1px solid rgba(0,212,160,.22);border-radius:7px;padding:10px 14px;font-family:var(--mo);font-size:9px;color:var(--ac)"></div>
+        </div>
+
+        <div id="ext-json-wrap" style="display:none;margin-top:12px">
+          <label class="fl">JSON Output — extractAndNormalizeImages()</label>
+          <textarea class="fi" id="ext-json" readonly style="min-height:110px;font-size:8.5px;line-height:1.55"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">⚙ Reglas de Normalización por Fuente</div></div>
+      <div style="padding:13px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--ac);margin-bottom:6px;letter-spacing:.1em">IDEALISTA</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.9;font-family:var(--mo)">WEB_DETAIL → WEB_DETAIL_TOP-XL-L<br>Solo URLs con ese patrón final<br>Excluir logos · banners · avatares</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--bl);margin-bottom:6px;letter-spacing:.1em">FOTOCASA</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.9;font-family:var(--mo)">Solo URLs con apps-wp/<br>Excluir h700-wp/ y appswm-wp/<br>Máxima resolución disponible</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--wn);margin-bottom:6px;letter-spacing:.1em">INMOWEB / MOBILIA</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.9;font-family:var(--mo)">/thumb/.../585_335/ → /image/<br>Thumbnails convertidos a originales<br>Deduplicación por hash de URL</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--pu);margin-bottom:6px;letter-spacing:.1em">OUTPUT JSON</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.9;font-family:var(--mo)">source · listingUrl · images[]<br>IMG_001.jpg → IMG_NNN.jpg<br>Descarga individual o en lote</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS -->
+  <div id="panel-leads" class="panel">
+    <div class="ag-banner" id="ag-banner">
+      🚫 <strong id="ag-cnt">0 agencias</strong> filtradas automáticamente.
+      <span style="cursor:pointer;text-decoration:underline;margin-left:8px;font-size:9.5px" onclick="toggleAg()">Mostrar igualmente</span>
+    </div>
+    <div class="filter-bar">
+      <span style="font-family:var(--mo);font-size:7.5px;color:var(--t4)">FILTRAR:</span>
+      <div class="fb-t on" onclick="fLead('todos',this)">Todos</div>
+      <div class="fb-t" onclick="fLead('nuevo',this)">Nuevos</div>
+      <div class="fb-t" onclick="fLead('contestado',this)">Contestados</div>
+      <div class="fb-t" onclick="fLead('cerrado',this)">Cerrados</div>
+      <div class="fb-sep"></div>
+      <div class="fb-t" id="fb-ag" onclick="fLead('agencia',this)">Agencias (0)</div>
+      <div class="fb-sep"></div>
+      <input class="fi" id="ls" placeholder="Buscar…" style="width:190px;padding:4px 9px;font-size:10px" oninput="renderLeads()">
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">✉ Bandeja</div><button class="btn bp bs" onclick="openLeadMo()">+ Lead manual</button></div>
+      <div id="leads-c"></div>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div id="panel-import" class="panel">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-h"><div class="card-t">⬆ Importar Leads · Detección Automática de Agencias</div></div>
+      <div style="padding:16px">
+        <div class="drop-z" id="dz" onclick="document.getElementById('file-in').click()" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
+          <div style="font-size:26px;margin-bottom:7px">📄</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:3px">Arrastra tu archivo aquí</div>
+          <div style="font-family:var(--mo);font-size:9.5px;color:var(--t3)">CSV · Excel · TXT — o haz clic para seleccionar</div>
+        </div>
+        <input type="file" id="file-in" accept=".csv,.txt" onchange="handleFile(event)">
+        <div class="sdiv">O pega el texto directamente</div>
+        <div class="fg">
+          <textarea class="paste-a" id="paste-a" placeholder="Pega aquí los mensajes de Idealista…
+
+Ejemplo:
+Juan García · juangarcia@gmail.com · 612345678
+  Hola, estoy muy interesado en el piso. ¿Podría visitarlo esta semana?
+
+Inmobiliaria Norte · info@inmonorte.es · 911234567
+  Somos agentes y tenemos clientes interesados en la zona.
+
+María López · mlopez@hotmail.com · 698765432
+  ¿Sigue disponible? Me interesa para vivir con mi familia."></textarea>
+        </div>
+        <div class="frow fr2">
+          <div class="fg">
+            <label class="fl">Asignar a propiedad</label>
+            <select class="fsel" id="imp-prop"><option value="">— Sin asignar —</option></select>
+          </div>
+          <div class="fg" style="display:flex;align-items:flex-end">
+            <button class="btn bp" onclick="processImport()" style="width:100%">🔍 Analizar y Filtrar Leads</button>
+          </div>
+        </div>
+        <div id="imp-preview" style="display:none;margin-top:16px">
+          <div class="sdiv">Resultado del Análisis</div>
+          <div id="imp-stats" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"></div>
+          <div id="imp-tbl" style="overflow-x:auto"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn bp" onclick="confirmImport()" style="flex:1">✓ Importar Solo Clientes Reales</button>
+            <button class="btn br" onclick="importAll()">Importar Todos (incl. agencias)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">🔍 Reglas de Detección de Agencias</div></div>
+      <div style="padding:13px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--rd);margin-bottom:6px;letter-spacing:.1em">AGENCIAS DIRECTAS</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.85">· "agencia", "inmobiliaria", "agente", "broker"<br>· Email con dominio corporativo<br>· Teléfono fijo empresarial (91x, 93x, 90x)<br>· "somos profesionales", "cartera de clientes"<br>· Dominios @remax · @century21 · @engel</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:11px">
+          <div style="font-family:var(--mo);font-size:7.5px;color:var(--wn);margin-bottom:6px;letter-spacing:.1em">AGENCIAS ENCUBIERTAS</div>
+          <div style="font-size:10px;color:var(--t2);line-height:1.85">· "para mi cliente", "represento a"<br>· "¿trabajáis con agencias?"<br>· "comisión", "honorarios", "exclusiva"<br>· Mensaje muy técnico + email corporativo<br>· Firma con nombre de empresa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="panel-login" class="panel">
+    <div class="card">
+      <div class="card-h"><div class="card-t">🔑 Protocolo de Acceso Seguro · Paso a Paso</div></div>
+      <div style="padding:14px">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">
+          <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:10px;text-align:center">
+            <div style="font-size:17px;margin-bottom:4px">1️⃣</div><div style="font-size:11px;font-weight:700;margin-bottom:3px">IP / Red</div>
+            <div style="font-size:9px;color:var(--t3)">Conéctate al hotspot SIM Naranja de esa cuenta</div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:10px;text-align:center">
+            <div style="font-size:17px;margin-bottom:4px">2️⃣</div><div style="font-size:11px;font-weight:700;margin-bottom:3px">Incógnito</div>
+            <div style="font-size:9px;color:var(--t3)">Abre Chrome en modo incógnito o perfil separado</div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:10px;text-align:center">
+            <div style="font-size:17px;margin-bottom:4px">3️⃣</div><div style="font-size:11px;font-weight:700;margin-bottom:3px">Gmail</div>
+            <div style="font-size:9px;color:var(--t3)">Entra al Gmail. Si pide 2FA usa la clave de la tabla</div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:10px;text-align:center">
+            <div style="font-size:17px;margin-bottom:4px">4️⃣</div><div style="font-size:11px;font-weight:700;margin-bottom:3px">Idealista</div>
+            <div style="font-size:9px;color:var(--t3)">Entrar con Google. NO escribas contraseña directa</div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:10px;text-align:center">
+            <div style="font-size:17px;margin-bottom:4px">5️⃣</div><div style="font-size:11px;font-weight:700;margin-bottom:3px">Cerrar</div>
+            <div style="font-size:9px;color:var(--t3)">Cierra sesión y ventana incógnito completamente</div>
+          </div>
+        </div>
+        <div style="background:var(--rdd);border:1px solid rgba(239,68,68,.25);border-radius:7px;padding:9px 13px;font-family:var(--mo);font-size:9px;color:var(--rd);margin-bottom:14px">
+          ⚠ NUNCA abras dos cuentas al mismo tiempo · NUNCA uses la misma IP para dos cuentas distintas
+        </div>
+        <div style="overflow-x:auto" id="login-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<!-- ═══ MODAL PROPIEDAD ═══ -->
+<div class="mo-ov" id="mo-prop">
+<div class="mo">
+  <div class="load-ov" id="prop-load">
+    <div class="ldots"><span></span><span></span><span></span></div>
+    <div class="load-t" id="prop-load-t">Extrayendo datos reales de Idealista con IA…</div>
+  </div>
+  <div class="mo-h">
+    <div class="mo-title">🏠 Nueva Propiedad · Ficha Idealista</div>
+    <div class="mo-x" onclick="closeMo('prop')">✕</div>
+  </div>
+  <div class="mo-body">
+
+    <!-- AUTO-FILL DUAL MODE -->
+    <div class="url-box" style="background:linear-gradient(135deg,rgba(0,212,160,.07),rgba(59,130,246,.04))">
+      <div class="url-box-lbl" style="margin-bottom:11px">
+        ⚡ AUTO-RELLENAR — Elige tu método:
+      </div>
+      <!-- TAB SELECTOR -->
+      <div style="display:flex;gap:5px;margin-bottom:13px">
+        <div class="af-tab on" id="tab-paste" onclick="switchAfTab('paste')" style="flex:1;padding:7px;border-radius:7px;border:1px solid rgba(0,212,160,.3);background:var(--acd);color:var(--ac);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer;transition:all .15s">
+          📋 Pegar texto del anuncio<br><span style="font-size:7.5px;opacity:.7">Funciona siempre · Sin API</span>
+        </div>
+        <div class="af-tab" id="tab-api" onclick="switchAfTab('api')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer;transition:all .15s">
+          🤖 URL + API de Anthropic<br><span style="font-size:7.5px;opacity:.7">Requiere API key propia</span>
+        </div>
+      </div>
+
+      <!-- MODE: PASTE TEXT -->
+      <div id="af-paste-mode">
+        <div style="font-family:var(--mo);font-size:8px;color:var(--t3);margin-bottom:6px">
+          Abre el anuncio en Idealista → selecciona todo el texto (Ctrl+A) → pégalo aquí:
+        </div>
+        <textarea id="af-paste-txt" class="fi fta"
+          style="min-height:90px;font-size:10px;font-family:var(--mo);line-height:1.55;margin-bottom:8px"
+          placeholder="Pega aquí el texto completo de la página de Idealista...
+
+Ejemplo de lo que se extrae:
+Piso en alquiler en calle Serrano, 45, Salamanca, Madrid
+8.000 €/mes · 262 m² · 4 hab. · 3 baños · 4ª planta
+Exterior · Ascensor · Amueblado · Aire acondicionado..."></textarea>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn bp" onclick="parseManual()" id="btn-parse" style="flex:1">⚡ Extraer y Rellenar campos</button>
+          <button class="btn bg bs" onclick="$('af-paste-txt').value=''">🗑 Limpiar</button>
+        </div>
+        <div class="url-st" id="parse-st"></div>
+      </div>
+
+      <!-- MODE: API -->
+      <div id="af-api-mode" style="display:none">
+        <div style="font-family:var(--mo);font-size:8px;color:var(--t3);margin-bottom:6px">
+          Requiere una API key de <a href="https://console.anthropic.com" target="_blank" style="color:var(--ac)">console.anthropic.com</a>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:7px">
+          <input class="fi" id="api-key-mo" type="password" placeholder="sk-ant-api03-..." style="flex:1;font-size:10px" oninput="localStorage.setItem('zk',this.value);localStorage.setItem('zinto_api_key',this.value)"/>
+          <button class="btn bg bs" onclick="testKey()" id="btn-tk">Probar</button>
+          <span id="key-st" style="font-family:var(--mo);font-size:8.5px;line-height:32px"></span>
+        </div>
+        <div class="url-row">
+          <input class="url-inp" id="url-id" placeholder="https://www.idealista.com/inmueble/XXXXXXXX/"/>
+          <button class="btn bp" onclick="doAutoFill()" id="btn-af">🤖 Extraer con IA</button>
+        </div>
+        <div class="url-st" id="url-st"></div>
+        <div class="pb" id="url-pb" style="display:none"><div class="pf" id="url-pf"></div></div>
+      </div>
+    </div>
+
+        <!-- CUENTA -->
+    <div class="sdiv">Cuenta Asignada</div>
+    <div class="frow fr2">
+      <div class="fg">
+        <label class="fl">Gmail · IP Asignada</label>
+        <select class="fsel" id="pp-c" onchange="updCInfo()"><option value="">— Seleccionar —</option></select>
+      </div>
+      <div class="fg">
+        <label class="fl">Info de Cuenta</label>
+        <div id="pp-ci" style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:7px 11px;font-family:var(--mo);font-size:9px;color:var(--t4);min-height:33px">Selecciona una cuenta</div>
+      </div>
+    </div>
+
+    <!-- OPERACIÓN -->
+    <div class="sdiv">Operación y Tipo de Inmueble</div>
+    <div class="frow fr3">
+      <div class="fg">
+        <label class="fl">Operación</label>
+        <div class="rg" id="pp-op">
+          <label class="rg-i sel"><input type="radio" name="op" value="Alquiler" checked>Alquiler</label>
+          <label class="rg-i"><input type="radio" name="op" value="Venta">Venta</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Tipo de Alquiler</label>
+        <div class="rg" id="pp-ta">
+          <label class="rg-i sel"><input type="radio" name="ta" value="Residencial" checked>Residencial</label>
+          <label class="rg-i"><input type="radio" name="ta" value="Temporada">Temporada</label>
+          <label class="rg-i"><input type="radio" name="ta" value="Vacacional">Vacacional</label>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Tipo Inmueble</label>
+        <div class="rg" id="pp-tipo">
+          <label class="rg-i sel"><input type="radio" name="tipo" value="Piso" checked>Piso</label>
+          <label class="rg-i"><input type="radio" name="tipo" value="Ático">Ático</label>
+          <label class="rg-i"><input type="radio" name="tipo" value="Chalet">Chalet</label>
+          <label class="rg-i"><input type="radio" name="tipo" value="Dúplex">Dúplex</label>
+          <label class="rg-i"><input type="radio" name="tipo" value="Local">Local</label>
+          <label class="rg-i"><input type="radio" name="tipo" value="Estudio">Estudio</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- UBICACIÓN -->
+    <div class="sdiv">Ubicación del Inmueble</div>
+    <div class="frow fr3">
+      <div class="fg"><label class="fl">Localidad</label><input class="fi" id="pp-loc" placeholder="Madrid"/></div>
+      <div class="fg"><label class="fl">Nombre de la Vía</label><input class="fi" id="pp-via" placeholder="Calle Hermosilla"/></div>
+      <div class="fg"><label class="fl">Número</label><input class="fi" id="pp-num" placeholder="30"/></div>
+    </div>
+    <div class="frow fr4">
+      <div class="fg"><label class="fl">Planta</label><select class="fsel" id="pp-pl"><option>Selecciona</option><option>Bajo</option><option>Entreplanta</option><option>1ª</option><option>2ª</option><option>3ª</option><option>4ª</option><option>5ª</option><option>6ª+</option></select></div>
+      <div class="fg"><label class="fl">Puerta</label><select class="fsel" id="pp-pu"><option>Selecciona</option><option>A</option><option>B</option><option>C</option><option>Izq</option><option>Dcha</option><option>Centro</option></select></div>
+      <div class="fg"><label class="fl">Bloque/Portal</label><input class="fi" id="pp-bq" placeholder="2"/></div>
+      <div class="fg"><label class="fl">Barrio / Zona</label><input class="fi" id="pp-barrio" placeholder="Salamanca"/></div>
+    </div>
+
+    <!-- CARACTERÍSTICAS -->
+    <div class="sdiv">Características del Inmueble</div>
+    <div class="frow fr4">
+      <div class="fg"><label class="fl">m² Construidos</label><input class="fi" id="pp-m2" placeholder="262" type="number" min="1"/></div>
+      <div class="fg"><label class="fl">m² Útiles (opc.)</label><input class="fi" id="pp-m2u" placeholder="220" type="number" min="1"/></div>
+      <div class="fg"><label class="fl">Habitaciones</label><input class="fi" id="pp-h" placeholder="4" type="number" min="0"/></div>
+      <div class="fg"><label class="fl">Baños</label><input class="fi" id="pp-b" placeholder="2" type="number" min="0"/></div>
+    </div>
+    <div class="frow fr3">
+      <div class="fg"><label class="fl">Estado</label>
+        <div class="rg">
+          <label class="rg-i"><input type="radio" name="est" value="A reformar">A reformar</label>
+          <label class="rg-i sel"><input type="radio" name="est" value="Buen estado" checked>Buen estado</label>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Fachada</label>
+        <div class="rg">
+          <label class="rg-i sel"><input type="radio" name="fc" value="Exterior" checked>Exterior</label>
+          <label class="rg-i"><input type="radio" name="fc" value="Interior">Interior</label>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Ascensor</label>
+        <div class="rg">
+          <label class="rg-i sel"><input type="radio" name="asc" value="Sí" checked>Sí</label>
+          <label class="rg-i"><input type="radio" name="asc" value="No">No</label>
+        </div>
+      </div>
+    </div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">Equipamiento</label>
+        <div class="rg" id="pp-eq">
+          <label class="rg-i"><input type="radio" name="eq" value="Sin equipar">Sin equipar</label>
+          <label class="rg-i"><input type="radio" name="eq" value="Cocina equipada">Cocina equipada</label>
+          <label class="rg-i sel"><input type="radio" name="eq" value="Amueblado" checked>Amueblado</label>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Orientación</label>
+        <div class="rg" id="pp-or">
+          <label class="rg-i"><input type="checkbox" value="Norte">Norte</label>
+          <label class="rg-i"><input type="checkbox" value="Sur">Sur</label>
+          <label class="rg-i"><input type="checkbox" value="Este">Este</label>
+          <label class="rg-i"><input type="checkbox" value="Oeste">Oeste</label>
+        </div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Otras Características</label>
+      <div class="rg" id="pp-ex">
+        <label class="rg-i"><input type="checkbox" value="Armarios empotrados">Armarios empotrados</label>
+        <label class="rg-i"><input type="checkbox" value="Aire acondicionado">Aire acondicionado</label>
+        <label class="rg-i"><input type="checkbox" value="Terraza">Terraza</label>
+        <label class="rg-i"><input type="checkbox" value="Balcón">Balcón</label>
+        <label class="rg-i"><input type="checkbox" value="Trastero">Trastero</label>
+        <label class="rg-i"><input type="checkbox" value="Cochera">Cochera</label>
+        <label class="rg-i"><input type="checkbox" value="Piscina">Piscina</label>
+        <label class="rg-i"><input type="checkbox" value="Jardín">Jardín</label>
+        <label class="rg-i"><input type="checkbox" value="Parking">Parking</label>
+      </div>
+    </div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">Calefacción</label>
+        <select class="fsel" id="pp-cal"><option value="">— Selecciona —</option><option>Individual gas</option><option>Individual eléctrica</option><option>Central</option><option>Aerotermia</option><option>Sin calefacción</option></select>
+      </div>
+      <div class="fg"><label class="fl">Cert. Energético</label>
+        <select class="fsel" id="pp-en"><option>En trámite</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+      </div>
+    </div>
+
+    <!-- PRECIO -->
+    <div class="sdiv">Precio y Referencia</div>
+    <div class="frow fr3">
+      <div class="fg"><label class="fl">Precio (€)</label><input class="fi" id="pp-pr" placeholder="8000" type="number" min="0"/></div>
+      <div class="fg"><label class="fl">Referencia Interna</label><input class="fi" id="pp-ref" placeholder="ZP-001"/></div>
+      <div class="fg"><label class="fl">URL Idealista (publicado)</label><input class="fi" id="pp-urlp" placeholder="https://www.idealista.com/inmueble/…"/></div>
+    </div>
+
+    <!-- DESCRIPCIÓN IA -->
+    <div class="sdiv">Descripción del Anuncio</div>
+    <div class="fg">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <label class="fl" style="margin-bottom:0">Descripción profesional</label>
+        <button class="btn bp bs" onclick="doGenDesc()">✨ Generar con IA</button>
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-lbl">✨ DESCRIPCIÓN PROFESIONAL <span class="ai-spin" id="ai-sp"></span></div>
+        <textarea class="fi fta" id="pp-desc"
+          style="background:transparent;border:none;outline:none;min-height:140px;line-height:1.65;font-family:var(--fn);font-size:12px"
+          placeholder="Pulsa 'Generar con IA' para crear una descripción profesional que incluye descripción del barrio, servicios cercanos, transporte y características del inmueble. No incluirá la palabra 'particular'."></textarea>
+      </div>
+    </div>
+
+    <!-- CONTACTO -->
+    <div class="sdiv">Datos de Contacto</div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">Email (auto desde cuenta)</label><input class="fi" id="pp-em" readonly placeholder="Se rellena al elegir cuenta"/></div>
+      <div class="fg"><label class="fl">Teléfono de Contacto</label><input class="fi" id="pp-tel" placeholder="+34 711 212 081"/></div>
+    </div>
+
+    <!-- IMÁGENES -->
+    <div class="sdiv">Imágenes del Inmueble</div>
+    <div class="img-upload-area" onclick="document.getElementById('img-in').click()" id="img-drop">
+      <div style="font-size:22px;margin-bottom:6px">📸</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:3px">Añadir imágenes</div>
+      <div style="font-family:var(--mo);font-size:9px;color:var(--t3)">JPG, PNG, WEBP — También puedes importarlas desde el Extractor de Imágenes</div>
+    </div>
+    <input type="file" id="img-in" accept="image/*" multiple onchange="handleImgUpload(event)">
+    <div class="img-prev-grid" id="img-prev"></div>
+    <div id="ext-import-hint" style="display:none;margin-top:8px;background:var(--acd);border:1px solid rgba(0,212,160,.2);border-radius:7px;padding:9px 13px;font-family:var(--mo);font-size:8.5px;color:var(--ac)"></div>
+
+  </div>
+  <div class="mo-foot">
+    <button class="btn bg" onclick="closeMo('prop')">Cancelar</button>
+    <button class="btn bp" onclick="saveProp()">💾 Guardar Propiedad</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CUENTA -->
+<div class="mo-ov" id="mo-cuenta">
+<div class="mo" style="width:480px">
+  <div class="mo-h"><div class="mo-title">👤 Nueva Cuenta</div><div class="mo-x" onclick="closeMo('cuenta')">✕</div></div>
+  <div class="mo-body">
+    <div class="fg"><label class="fl">Nombre del Titular</label><input class="fi" id="c-nom" placeholder="Alejandra Mendoza"/></div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">Gmail</label><input class="fi" id="c-gm" placeholder="ejemplo@gmail.com"/></div>
+      <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="c-pw" type="password" placeholder="••••••••"/></div>
+    </div>
+    <div class="fg"><label class="fl">Clave 2FA Google Authenticator</label><input class="fi" id="c-fa" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx" style="font-size:10px"/></div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">IP Asignada</label><select class="fsel" id="c-ip"></select></div>
+      <div class="fg"><label class="fl">Teléfono</label><input class="fi" id="c-tel" placeholder="+34 6xx xxx xxx"/></div>
+    </div>
+    <div class="fg"><label class="fl">Notas</label><input class="fi" id="c-n" placeholder="Observaciones…"/></div>
+  </div>
+  <div class="mo-foot">
+    <button class="btn bg" onclick="closeMo('cuenta');_editCuentaId=null;">Cancelar</button>
+    <button class="btn bp" onclick="saveCuenta()">Guardar Cuenta</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL LEAD -->
+<div class="mo-ov" id="mo-lead">
+<div class="mo" style="width:460px">
+  <div class="mo-h"><div class="mo-title">✉ Registrar Lead Manual</div><div class="mo-x" onclick="closeMo('lead')">✕</div></div>
+  <div class="mo-body">
+    <div class="fg"><label class="fl">Propiedad</label><select class="fsel" id="l-pr"></select></div>
+    <div class="frow fr2">
+      <div class="fg"><label class="fl">Nombre</label><input class="fi" id="l-nm" placeholder="Juan García"/></div>
+      <div class="fg"><label class="fl">Teléfono</label><input class="fi" id="l-tel" placeholder="+34 6xx xxx xxx"/></div>
+    </div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" id="l-em" placeholder="juan@gmail.com"/></div>
+    <div class="fg"><label class="fl">Mensaje</label><textarea class="fi fta" id="l-ms" placeholder="Contenido del mensaje…"></textarea></div>
+    <div class="frow fr3">
+      <div class="fg"><label class="fl">Canal</label><select class="fsel" id="l-can"><option>Idealista</option><option>WhatsApp</option><option>Teléfono</option><option>Email</option></select></div>
+      <div class="fg"><label class="fl">Estado</label><select class="fsel" id="l-est"><option value="nuevo">Nuevo</option><option value="contestado">Contestado</option><option value="cerrado">Cerrado</option></select></div>
+      <div class="fg"><label class="fl">Tipo</label><select class="fsel" id="l-ag"><option value="no">Cliente real</option><option value="directa">Agencia directa</option><option value="encubierta">Ag. encubierta</option></select></div>
+    </div>
+  </div>
+  <div class="mo-foot">
+    <button class="btn bg" onclick="closeMo('lead')">Cancelar</button>
+    <button class="btn bp" onclick="saveLead()">Guardar Lead</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// DATA — ORDEN EXACTO: Alejandra → Cheryl → ...
+// ════════════════════════════════════════════════
+const IPS=[
+  "158.140.219.239","158.140.217.248","158.140.219.233","158.140.219.53",
+  "158.140.219.3","158.140.219.209","158.140.219.105","158.140.219.43",
+  "158.140.219.215","158.140.219.92","158.140.219.97","158.140.219.219",
+  "158.140.217.0","158.140.217.1","158.140.217.10","158.140.217.100",
+  "158.140.219.0","158.140.219.1","158.140.219.10","158.140.219.100"
+];
+const ACCOUNTS_RAW=[
+  ["Alejandra Mendoza","alemendoza1001@gmail.com","Sjjhjgc124#@","gwbp o7mx cfze 6vpw y7bp sa6f jajb lybi"],
+  ["Cheryl Davis","cheryl44davis@gmail.com","Sjjhjgc124#@","4jk2 egb6 w2pz vh5q blxn is7m we3q xtxx"],
+  ["A. Mangone","amangone2014@gmail.com","Sjjhjgc124#@","eydj ekeo 2vkc ormk zbe5 3pbl 3sbp ciuh"],
+  ["Mangone 2014","mangone2014@gmail.com","Sjjhjgc124#@","4opf jv62 vgih bv6n 4uhz bvej s7s6 ayk6"],
+  ["Bea Trice","theabeatricce@gmail.com","Sjjhjgc124#@","mnmb 7evi 2efz x6va 64cn zcux aj7t uonh"],
+  ["B. Shy Miracle","bshymiracle@gmail.com","Sjjhjgc124#@","r7lw vocx rptj w74z rz4r cl4u yw7u 4kkr"],
+  ["Cody Freeman","codyfreeman0991@gmail.com","Sjjhjgc124#@","omkx c4pc 3ho4 v665 cm6u bhyj 5ssu 4lal"],
+  ["Pedro H.N.","pedrohn966@gmail.com","Sjjhjgc124#@","afrj a5ir ndwv qe5v qe3e hnnt cyk4 oxpn"],
+  ["GL 880","gl8800341@gmail.com","Sjjhjgc124#@","54pi 5uvp r2yy pxrv msm2 bh2u kp6h d77f"],
+  ["Angela Pittman","angelapittman218@gmail.com","Sjjhjgc124#@","ng2j 4szo pcdq kgsi tx4q 7bch zwzz 7qam"],
+  ["A. Pittman 651","apittman651@gmail.com","Sjjhjgc124#@","t7cw itqu 4ati mz2g bg22 pzv4 ugzd k35i"],
+  ["Pittman Angela","pittmanangela54@gmail.com","Sjjhjgc124#@","hlk7 yret hb2g qz5i foth rfk5 afg5 6suy"],
+  ["Beverly Beal","beverlybeal40@gmail.com","Sjjhjgc124#@","ns3p 5mxb 3blo f3sg x23h do76 v62b yswd"],
+  ["B. Beal 624","bbeal6241124@gmail.com","Sjjhjgc124#@","giak wrod gi2d 3p6a fflu gxtj xh24 zyti"],
+  ["Beal Beverly","bealbeverly82@gmail.com","Sjjhjgc124#@","ox2l vrv7 fazm feix dncm du7i i3r5 g6gb"],
+  ["BAB NJ GB","babnjgb4ever@gmail.com","Sjjhjgc124#@","k5um 3plr x7hd 4iyt mjk7 2x5t hef5 bdwd"],
+  ["Cuenta 17","—","—","—"],
+  ["Cuenta 18","—","—","—"],
+  ["Cuenta 19","—","—","—"],
+  ["Cuenta 20","—","—","—"],
+];
+
+const CUENTAS_DEFAULT=ACCOUNTS_RAW.map((r,i)=>({
+  id:'c'+i,nombre:r[0],gmail:r[1],pass:r[2],fa:r[3],
+  ip:IPS[i]||'',tel:'',notas:'',
+  ultimo_acceso:i<16?rndDate():null,
+  estado:r[2]!=='—'?'activa':'pendiente'
+}));
+
+// ── PERSISTENCIA localStorage ──
+function saveAll(){
+  try{localStorage.setItem('zinto_v4',JSON.stringify({cuentas,props,leads}))}catch(e){}
+}
+function loadAll(){
+  try{
+    const raw=localStorage.getItem('zinto_v4');
+    if(raw){const d=JSON.parse(raw);return d}
+  }catch(e){}
+  return null;
+}
+const _saved=loadAll();
+let cuentas=(_saved&&_saved.cuentas&&_saved.cuentas.length)?_saved.cuentas:CUENTAS_DEFAULT;
+let props=(_saved&&_saved.props)||[];
+let leads=(_saved&&_saved.leads)||[];
+let pendingImport=[],showAg=false,leadFilter='todos';
+let extImages=[],selImgs=new Set(),propImgs=[];
+
+function rndDate(){const d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*14));d.setHours(Math.floor(Math.random()*12)+8,Math.floor(Math.random()*60));return d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function $(id){return document.getElementById(id)}
+function set(id,v){const e=$(id);if(e)e.textContent=v}
+function pad(n){return String(n).padStart(2,'0')}
+function showToast(msg,dur=3000){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur)}
+function cp(txt){navigator.clipboard.writeText(txt).then(()=>showToast('✓ Copiado')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('✓ Copiado')})}
+
+function slotsH(used,max){
+  let h='<div class="slots">';
+  for(let i=0;i<max;i++)h+=`<div class="slot ${i<used?(used>=max?'f':'u'):'e'}"></div>`;
+  h+=`<span class="sl-l">${used}/${max}</span></div>`;
+  return h;
+}
+
+function setSt(id,cls,msg){const e=$(id);if(!e)return;e.className='url-st '+(cls||'');e.textContent=msg}
+
+function progAnim(id,target,dur){
+  const el=$(id);if(!el)return;
+  let v=parseFloat(el.style.width)||0;
+  const step=(target-v)/(dur/16);
+  const t=setInterval(()=>{v+=step;el.style.width=Math.min(v,target)+'%';if(v>=target)clearInterval(t)},16);
+}
+
+// ════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════
+function go(el,id){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  if(el)el.classList.add('on');
+  const panel=$('panel-'+id);
+  if(panel)panel.classList.add('on');
+  const T={
+    dash:['Dashboard General','Gestión multi-cuenta · Idealista particulares'],
+    cuentas:['Cuentas & IPs','1 IP → 1 cuenta → máx. 2 propiedades'],
+    props:['Inventario de Propiedades','Campos completos Idealista'],
+    imgs:['Extractor de Imágenes','Idealista · Fotocasa · Inmoweb · Mobilia'],
+    leads:['Bandeja de Leads','Filtrado automático de agencias'],
+    import:['Importar Leads','Pega texto o sube archivo · Detección de agencias'],
+    login:['Guía de Login Seguro','Protocolo cuenta a cuenta'],
+  };
+  if(T[id]){set('pg-t',T[id][0]);set('pg-s',T[id][1])}
+  if(id==='dash')renderDash();
+  if(id==='cuentas')renderCuentas();
+  if(id==='props')renderProps();
+  if(id==='leads')renderLeads();
+  if(id==='login')renderLogin();
+  if(id==='import')popImpProp();
+}
+
+// ════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════
+function renderDash(){
+  const ts=cuentas.length*2,us=props.length;
+  const rl=leads.filter(l=>l.ag==='no'),ag=leads.filter(l=>l.ag!=='no');
+  const nl=rl.filter(l=>l.estado==='nuevo').length;
+  set('d-c',cuentas.length);
+  set('d-cs',`${cuentas.filter(c=>c.estado==='activa').length} activas · ${cuentas.filter(c=>c.estado==='pendiente').length} pendientes`);
+  set('d-p',us);set('d-ps',`${us} / ${ts} slots`);
+  set('d-l',rl.length);set('d-ls',`${nl} pendientes`);
+  set('d-a',ag.length);
+  set('nb-c',cuentas.length);set('nb-p',us);set('nb-l',nl||rl.length);
+  set('sb-meta',`${cuentas.length} cuentas · ${ts} slots máx.`);
+
+  $('d-tbl').innerHTML=`<table class="tbl"><thead><tr><th>#</th><th>Nombre</th><th>Gmail</th><th>IP</th><th>Slots</th><th>Estado</th></tr></thead><tbody>`+
+    cuentas.slice(0,8).map((c,i)=>{
+      const u=props.filter(p=>p.cId===c.id).length;
+      return`<tr><td style="font-family:var(--mo);color:var(--t4)">${pad(i+1)}</td><td><strong>${c.nombre}</strong></td><td style="font-family:var(--mo);font-size:9.5px">${c.gmail}</td><td style="font-family:var(--mo);font-size:9.5px;color:var(--ac)">${c.ip||'—'}</td><td>${slotsH(u,2)}</td><td><span class="chip ${c.estado==='activa'?'cg':'cw'}">${c.estado}</span></td></tr>`;
+    }).join('')+(cuentas.length>8?`<tr><td colspan="6" style="text-align:center;font-family:var(--mo);font-size:8.5px;color:var(--t4);padding:8px">+${cuentas.length-8} más →</td></tr>`:'')
+    +`</tbody></table>`;
+
+  $('d-chart').innerHTML=cuentas.slice(0,10).map(c=>{
+    const u=props.filter(p=>p.cId===c.id).length,pct=(u/2)*100;
+    const col=u===2?'var(--rd)':u===1?'var(--wn)':'var(--ac)';
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+      <span style="font-family:var(--mo);font-size:8px;color:var(--t4);width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre}</span>
+      <div style="flex:1;height:5px;background:var(--b1);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:width .5s"></div></div>
+      <span style="font-family:var(--mo);font-size:8.5px;color:${col};width:20px;text-align:right">${u}/2</span>
+    </div>`;
+  }).join('')+(cuentas.length>10?`<div style="text-align:center;font-family:var(--mo);font-size:8px;color:var(--t4);margin-top:5px">+${cuentas.length-10} más cuentas</div>`:'');
+
+  const dll=$('d-ll');
+  if(!rl.length){dll.innerHTML=`<div style="padding:26px;text-align:center;color:var(--t4);font-family:var(--mo);font-size:10px">Sin leads aún. Importa desde el panel de leads.</div>`;return}
+  dll.innerHTML=[...rl].slice(-5).reverse().map(leadHTML).join('');
+}
+
+// ════════════════════════════════════════════════
+// CUENTAS
+// ════════════════════════════════════════════════
+function renderCuentas(){
+  $('c-tbl').innerHTML=`<thead><tr><th>#</th><th>Nombre</th><th>Gmail</th><th>IP Asignada</th><th>ASN</th><th>Slots</th><th>Último Acceso</th><th>Estado</th><th>2FA</th></tr></thead><tbody>`+
+    cuentas.map((c,i)=>{
+      const u=props.filter(p=>p.cId===c.id).length;
+      return`<tr>
+        <td style="font-family:var(--mo);color:var(--t4)">${pad(i+1)}</td>
+        <td><strong>${c.nombre}</strong></td>
+        <td style="font-family:var(--mo);font-size:9.5px">${c.gmail}</td>
+        <td><span style="font-family:var(--mo);font-size:9.5px;color:var(--ac)">${c.ip||'<span style="color:var(--rd)">Sin IP</span>'}</span></td>
+        <td style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">AS5511 🇪🇸</td>
+        <td>${slotsH(u,2)}</td>
+        <td style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">${c.ultimo_acceso||'Nunca'}</td>
+        <td><span class="chip ${c.estado==='activa'?'cg':'cw'}">${c.estado}</span></td>
+        <td><button class="btn bg bs" onclick="showFA(${i})" style="font-size:8.5px">Ver 2FA</button> <button class="btn bg bs" onclick="marcarAcceso(${i})" style="font-size:8.5px">✓ Acceso</button> <button class="btn bg bs" onclick="editCuenta(${i})" style="font-size:8.5px">✏ Editar</button></td>
+      </tr>`;
+    }).join('')+`</tbody>`;
+}
+
+function showFA(i){
+  const c=cuentas[i];
+  if(c.fa==='—'){showToast('⚠ Esta cuenta no tiene 2FA configurado');return}
+  showToast('🔑 '+c.nombre+': '+c.fa,6000);
+  cp(c.fa);
+}
+
+function marcarAcceso(i){
+  cuentas[i].ultimo_acceso=new Date().toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  saveAll();
+  renderCuentas();showToast('✓ Acceso registrado para '+cuentas[i].nombre);
+}
+
+// ════════════════════════════════════════════════
+// PROPS
+// ════════════════════════════════════════════════
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function renderProps(){
+  const q=(($('p-search')||{value:''}).value||'').toLowerCase().trim();
+  let filtered=props;
+  if(q){
+    filtered=props.filter(p=>{
+      const cnt=cuentas.find(c=>c.id===p.cId);
+      return (p.ref||'').toLowerCase().includes(q)||(p.tipo||'').toLowerCase().includes(q)||
+        (p.loc||'').toLowerCase().includes(q)||(p.barrio||'').toLowerCase().includes(q)||
+        (p.via||'').toLowerCase().includes(q)||(p.op||'').toLowerCase().includes(q)||
+        (cnt&&cnt.nombre.toLowerCase().includes(q));
+    });
+  }
+  set('p-lbl',`${filtered.length}/${props.length} props · ${props.length}/${cuentas.length*2} slots`);
+  const g=$('p-grid');
+  if(!filtered.length){
+    const msg=q?`Sin resultados para "${esc(q)}".`:'Sin propiedades. Pulsa "＋ Nueva Propiedad".';
+    g.innerHTML=`<div style="padding:32px;text-align:center;color:var(--t4);font-family:var(--mo);font-size:10px">${msg}</div>`;
+    return
+  }
+  const cls=['cg','cb','cw','cp','cr'];
+  g.innerHTML=`<div class="prop-grid">`+
+    filtered.map((p,i)=>{
+      const cnt=cuentas.find(x=>x.id===p.cId);
+      const tags=[p.tipo,p.op,p.m2?p.m2+'m²':'',p.h?p.h+' hab':'',p.b?p.b+'b':''].filter(Boolean);
+      const img=p.images&&p.images[0]||null;
+      return`<div class="pc">
+        ${img?`<img class="pc-img" src="${img}" onerror="this.style.display='none'" alt=""/>`:``}
+        <div class="pc-ref">REF ${p.ref} · ${cnt?cnt.nombre:'?'}</div>
+        <div class="pc-t">${p.tipo} en ${p.via||p.loc}</div>
+        <div class="pc-l">📍 ${p.loc}${p.barrio?', '+p.barrio:''}${p.via?', '+p.via:''} ${p.num||''}</div>
+        <div class="pc-tags">${tags.map(t=>`<span class="chip ${cls[i%5]}" style="font-size:7.5px">${t}</span>`).join('')}</div>
+        <div class="pc-foot">
+          <span class="pc-price">€${Number(p.pr||0).toLocaleString('es-ES')}${p.op==='Alquiler'?'/mes':''}</span>
+          ${p.urlP?`<a href="${p.urlP}" target="_blank" style="font-family:var(--mo);font-size:8.5px;color:var(--bl)">→ Ver en Idealista</a>`:`<span style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">Sin publicar</span>`}
+        </div>
+      </div>`;
+    }).join('')
+    +`<div class="pc pc-add" onclick="openPropMo()"><div style="font-size:20px">+</div><span>Añadir propiedad</span></div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+// LEADS
+// ════════════════════════════════════════════════
+function leadHTML(l){
+  const p=props.find(x=>x.id===l.pId);
+  const cnt=p?cuentas.find(c=>c.id===p.cId):null;
+  const init=l.nombre.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()||'?';
+  const avCols=['rgba(0,212,160,.15);color:var(--ac)','rgba(59,130,246,.15);color:var(--bl)','rgba(245,158,11,.15);color:var(--wn)','rgba(168,85,247,.15);color:var(--pu)','rgba(239,68,68,.15);color:var(--rd)'];
+  const av=avCols[(l.nombre.charCodeAt(0)||0)%5];
+  const sc={nuevo:'cb',contestado:'cg',cerrado:'cgr'}[l.estado]||'cgr';
+  const isAg=l.ag!=='no';
+  return`<div class="lead-item${isAg?' ag':''}" data-ag="${l.ag}">
+    ${l.estado==='nuevo'&&!isAg?'<span class="udot"></span>':'<span style="width:5px;flex-shrink:0"></span>'}
+    <div class="lead-av" style="background:${av}">${init}</div>
+    <div class="lead-body">
+      <div class="lead-top">
+        <span class="lead-nm">${l.nombre}</span>
+        <div class="lead-r">
+          ${isAg?`<span class="chip cr" style="font-size:7.5px">${l.ag==='directa'?'🚫 Agencia':'⚠ Encubierta'}</span>`:``}
+          <span class="chip ${sc}">${l.estado}</span>
+          <span class="lead-tm">${l.fecha}</span>
+        </div>
+      </div>
+      <div class="lead-pr">${p?`${p.tipo} · ${p.loc}${p.via?', '+p.via:''}`:l.prop_txt||'Sin propiedad'} ${cnt?`· <span style="color:var(--ac);font-family:var(--mo);font-size:8px">${cnt.nombre}</span>`:''} · <span style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">${l.canal}</span></div>
+      <div class="lead-ms">${l.tel?l.tel+' · ':''}"${(l.msg||'').substring(0,120)}"</div>
+    </div>
+  </div>`;
+}
+
+function renderLeads(){
+  const search=($('ls')||{}).value||'';
+  const c=$('leads-c');
+  let f=leads.filter(l=>{
+    if(leadFilter==='agencia')return l.ag!=='no';
+    if(leadFilter!=='todos')return l.estado===leadFilter&&l.ag==='no';
+    if(!showAg)return l.ag==='no';
+    return true;
+  });
+  if(search){const s=search.toLowerCase();f=f.filter(l=>(l.nombre||'').toLowerCase().includes(s)||(l.tel||'').includes(s)||(l.msg||'').toLowerCase().includes(s))}
+  const agCount=leads.filter(l=>l.ag!=='no').length;
+  const banner=$('ag-banner');
+  if(agCount>0&&!showAg){banner.style.display='flex';set('ag-cnt',`${agCount} agencia${agCount>1?'s':''}  detectada${agCount>1?'s':''}`)}
+  else banner.style.display='none';
+  const fbag=$('fb-ag');if(fbag)fbag.textContent=`Agencias (${agCount})`;
+  if(!f.length){c.innerHTML=`<div style="padding:28px;text-align:center;color:var(--t4);font-family:var(--mo);font-size:10px">Sin leads en esta categoría.</div>`;return}
+  c.innerHTML=[...f].reverse().map(leadHTML).join('');
+}
+
+function fLead(f,el){leadFilter=f;document.querySelectorAll('.fb-t').forEach(t=>t.classList.remove('on'));el.classList.add('on');renderLeads()}
+function toggleAg(){showAg=!showAg;renderLeads()}
+
+// ════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════
+function renderLogin(){
+  $('login-wrap').innerHTML=`<table class="tbl"><thead><tr><th>#</th><th>Nombre</th><th>Gmail</th><th>Contraseña</th><th>2FA (App Authenticator)</th><th>IP Asignada</th><th>Último acceso</th></tr></thead><tbody>`+
+    cuentas.map((c,i)=>`<tr>
+      <td style="font-family:var(--mo);color:var(--t4)">${pad(i+1)}</td>
+      <td><strong>${c.nombre}</strong></td>
+      <td style="font-family:var(--mo);font-size:9.5px">${c.gmail}</td>
+      <td><span class="copy-b" onclick="cp('${c.pass.replace(/'/g,"\\'")}')">📋</span> <span style="font-family:var(--mo);font-size:9px;color:var(--t3)">${c.pass!=='—'?'••••••••':'—'}</span></td>
+      <td>
+        ${c.fa!=='—'?`<div style="font-family:var(--mo);font-size:8.5px;color:var(--ac);display:flex;align-items:center;gap:6px">
+          <span>${c.fa.substring(0,20)}…</span>
+          <span class="copy-b" onclick="cp('${c.fa}')">📋</span>
+        </div>`:'<span style="color:var(--t4)">—</span>'}
+      </td>
+      <td style="font-family:var(--mo);font-size:9.5px;color:var(--ac)">${c.ip||'—'}</td>
+      <td style="font-family:var(--mo);font-size:8.5px;color:var(--t4)">${c.ultimo_acceso||'Nunca'}</td>
+    </tr>`).join('')+`</tbody></table>`;
+}
+
+// ════════════════════════════════════════════════
+// IMAGE EXTRACTOR — extractAndNormalizeImages()
+// ════════════════════════════════════════════════
+async function extractAndNormalizeImages(listingUrl, source) {
+  const prompt = `Visita y analiza esta URL de anuncio inmobiliario: ${listingUrl}
+
+Fuente detectada: ${source}
+
+INSTRUCCIONES CRÍTICAS:
+Busca TODAS las URLs de imágenes del inmueble en la página HTML, incluyendo:
+- Tags <img> con src/data-src/srcset
+- JSON embebido en scripts (window.__INITIAL_STATE__, photosInfo, etc.)
+- Meta tags og:image
+- Atributos data-lazy, data-original
+
+REGLAS DE NORMALIZACIÓN OBLIGATORIAS por fuente:
+${source==='idealista'?`IDEALISTA:
+1. Encontrar todas las URLs que contengan "WEB_DETAIL"
+2. Reemplazar "WEB_DETAIL" → "WEB_DETAIL_TOP-XL-L" en cada URL
+3. SOLO incluir URLs que queden con "WEB_DETAIL_TOP-XL-L"
+4. Excluir: logos de empresa, avatares de usuario, banners publicitarios, imágenes de UI`:''}
+${source==='fotocasa'?`FOTOCASA:
+1. SOLO incluir URLs que contengan exactamente "apps-wp/"
+2. EXCLUIR todas las URLs que contengan "h700-wp/" o "appswm-wp/"
+3. Preferir la mayor resolución disponible`:''}
+${source==='inmoweb'||source==='mobilia'?`INMOWEB/MOBILIA:
+1. Detectar URLs de thumbnails con patrón /thumb/HASH/585_335/
+2. Reemplazar /thumb/HASH/585_335/ por /image/ en cada URL
+3. Resultado debe ser URL a imagen original de alta resolución`:''}
+
+DEDUPLICACIÓN: Eliminar URLs duplicadas. Ordenar por orden de aparición.
+
+Responde ÚNICAMENTE con este JSON exacto (sin texto adicional, sin bloques de código):
+{"source":"${source}","listingUrl":"${listingUrl}","images":[{"n":1,"url":"URL_NORMALIZADA","filename":"IMG_001.jpg"},{"n":2,"url":"URL_NORMALIZADA","filename":"IMG_002.jpg"}],"count":0,"property":{"title":"","price":0,"m2":0,"rooms":0,"bathrooms":0,"address":"","neighborhood":"","city":"","description":""}}`;
+
+  const { txt } = await callClaude({
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 4000,
+    tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+  });
+
+  // Extract JSON
+  const jMatch = txt.match(/\{[\s\S]*"images"[\s\S]*\}/);
+  if (!jMatch) throw new Error('No se encontraron imágenes en el anuncio');
+  let parsed;
+  try { parsed = JSON.parse(jMatch[0]); }
+  catch(e) { throw new Error('Error parseando respuesta de IA'); }
+
+  // Client-side normalization safety net
+  parsed.images = normalizeImgUrls(parsed.images || [], source);
+  parsed.count = parsed.images.length;
+  return parsed;
+}
+
+function normalizeImgUrls(images, source) {
+  const seen = new Set();
+  return images.map(img => {
+    if (!img || !img.url) return null;
+    let url = img.url.trim();
+
+    if (source === 'idealista') {
+      // Excluir no-fotos
+      if (/logo|avatar|banner|icon|user|profile/i.test(url)) return null;
+      // Excluir si no es img de idealista
+      if (!url.includes('idealista.com') && !url.includes('img') ) return null;
+      // Limpiar cualquier variante de WEB_DETAIL y reemplazar con la correcta
+      // Primero quitar todo lo que venga después de WEB_DETAIL (ej: _TOP-XL-L_TOP-, etc.)
+      url = url.replace(/WEB_DETAIL[^/]*/g, 'WEB_DETAIL_TOP-XL-L');
+      // Verificar que sea URL de foto real (contiene /id.pro o image.master)
+      if (!url.includes('/id.pro') && !url.includes('image.master') && !url.includes('/blur/')) return null;
+    }
+
+    if (source === 'fotocasa') {
+      if (!url.includes('apps-wp/')) return null;
+      if (url.includes('h700-wp/') || url.includes('appswm-wp/')) return null;
+    }
+
+    if (source === 'inmoweb' || source === 'mobilia') {
+      url = url.replace(/\/thumb\/[^/]+\/\d+_\d+\//g, '/image/');
+    }
+
+    if (seen.has(url)) return null;
+    seen.add(url);
+    return { ...img, url };
+  }).filter(Boolean).map((img, i) => ({
+    ...img,
+    n: i + 1,
+    filename: `IMG_${String(i+1).padStart(3,'0')}.jpg`
+  }));
+}
+
+async function doExtractImages() {
+  const url = $('ext-url').value.trim();
+  const source = $('ext-src').value;
+  if (!url) { showToast('⚠ Introduce una URL de anuncio'); return; }
+  const btn = $('btn-ext');
+  btn.disabled = true; btn.textContent = '⏳ Extrayendo…';
+  setSt('ext-st','ld','🔍 Extrayendo imágenes con IA…');
+  $('ext-pb').style.display = 'block';
+  progAnim('ext-pf', 80, 2500);
+  $('ext-results').style.display = 'none';
+  $('ext-json-wrap').style.display = 'none';
+  try {
+    const result = await extractAndNormalizeImages(url, source);
+    extImages = result.images;
+    selImgs = new Set(result.images.map((_,i)=>i));
+    renderExtGrid(result);
+    setSt('ext-st','ok',`✓ ${result.count} imágenes extraídas y normalizadas · ${source}`);
+    progAnim('ext-pf',100,300);
+    setTimeout(()=>{ $('ext-pb').style.display='none'; }, 700);
+    $('ext-json-wrap').style.display = 'block';
+    $('ext-json').value = JSON.stringify(result, null, 2);
+    if (result.property) window._lastExt = result;
+  } catch(e) {
+    setSt('ext-st','err','⚠ '+e.message);
+    $('ext-pb').style.display = 'none';
+    showToast('⚠ '+e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 Extraer Imágenes';
+  }
+}
+
+
+// ════════════════════════════════════════════════
+// IMAGE LOADER — fetch with no-referrer to bypass Idealista hotlink block
+// ════════════════════════════════════════════════
+const imgBlobCache = {};
+
+async function loadImgBlob(url, imgEl) {
+  if (imgBlobCache[url]) { imgEl.src = imgBlobCache[url]; return; }
+  try {
+    const resp = await fetch(url, {
+      headers: { 'Referer': '' },
+      referrerPolicy: 'no-referrer',
+      mode: 'cors'
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const blob = await resp.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    imgBlobCache[url] = blobUrl;
+    imgEl.src = blobUrl;
+  } catch(e) {
+    // CORS blocked — try direct with referrerpolicy attribute (works in many cases)
+    imgEl.referrerPolicy = 'no-referrer';
+    imgEl.src = url;
+  }
+}
+
+function renderExtGrid(result) {
+  $('ext-results').style.display = 'block';
+  set('ext-cnt', result.images ? result.images.length : 0);
+  set('ext-src-lbl', result.source || '');
+
+  const grid = $('ext-grid');
+  grid.innerHTML = '';
+
+  if (!result.images || result.images.length === 0) {
+    grid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--t4);font-family:var(--mo);font-size:10px;grid-column:1/-1">No se encontraron imágenes.</div>';
+    return;
+  }
+
+  result.images.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'img-th' + (selImgs.has(i) ? ' sel' : '');
+    wrap.dataset.idx = i;
+
+    // Thumbnail via proxy propio (Cloudflare Worker con Referer: idealista.com)
+    const im = document.createElement('img');
+    im.alt = img.filename;
+    im.loading = 'lazy';
+    im.src = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=' + encodeURIComponent(img.url);
+    im.onerror = function() {
+      this.style.opacity = '.15';
+    };
+
+    // Número badge esquina inferior derecha
+    const label = document.createElement('div');
+    label.className = 'img-th-n';
+    label.textContent = '#' + (i + 1);
+
+    // Botón ver (aparece en hover)
+    const opener = document.createElement('a');
+    opener.className = 'img-open';
+    opener.href = img.url;
+    opener.target = '_blank';
+    opener.textContent = '↗ ver';
+    opener.onclick = e => e.stopPropagation();
+
+    // Checkmark selección esquina superior izquierda
+    const ck = document.createElement('div');
+    ck.className = 'sel-ck';
+    ck.textContent = '✓';
+
+    wrap.appendChild(im);
+    wrap.appendChild(label);
+    wrap.appendChild(opener);
+    wrap.appendChild(ck);
+
+    wrap.onclick = () => openLightbox(i);
+    wrap.ondblclick = e => { toggleExtImg(i); e.stopPropagation(); };
+
+    grid.appendChild(wrap);
+  });
+
+  // Property info bar
+  const pb = $('ext-prop-bar');
+  if (result.property && (result.property.price || result.property.m2)) {
+    pb.style.display = 'block';
+    const p = result.property;
+    pb.innerHTML = `✓ Datos extraídos: <strong>${p.title||''}</strong> · €${p.price?p.price.toLocaleString('es-ES'):''} · ${p.m2||'?'}m² · ${p.rooms||'?'} hab · ${p.bathrooms||'?'} baños
+      <button class="btn bp bs" onclick="useExtInProp()" style="margin-left:12px">Usar en Nueva Propiedad →</button>`;
+  } else pb.style.display = 'none';
+}
+
+let lbIdx = 0;
+
+function toggleExtImg(i) {
+  const el = document.querySelector(`.img-th[data-i="${i}"]`);
+  if (selImgs.has(i)) { selImgs.delete(i); el&&el.classList.remove('sel'); }
+  else { selImgs.add(i); el&&el.classList.add('sel'); }
+}
+
+function openLightbox(i) {
+  lbIdx = i;
+  showLightboxAt(i);
+  document.getElementById('lightbox').classList.add('open');
+  document.addEventListener('keydown', lbKeyHandler);
+}
+
+function showLightboxAt(i) {
+  const img = extImages[i];
+  if (!img) return;
+  const lbImg = document.getElementById('lightbox-img');
+  const lbInfo = document.getElementById('lightbox-info');
+  const lbPos = document.getElementById('lightbox-pos');
+  const lbUrl = document.getElementById('lightbox-url');
+  // Load via corsproxy (server-side fetch, sin Referer)
+  const lbContainer = document.getElementById('lightbox-img-container');
+  const proxyHq = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=' + encodeURIComponent(img.url);
+  lbImg.style.display = 'block';
+  lbImg.style.opacity = '0.4';
+  lbImg.onload = () => { lbImg.style.opacity = '1'; };
+  lbImg.onerror = function() {
+    if (!this.dataset.tried) {
+      this.dataset.tried = '1';
+      this.style.opacity='.3'; this.parentElement.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;opacity:.3">🖼</div>';
+    }
+  };
+  lbImg.src = proxyHq;
+  if (lbContainer) lbContainer.style.display = 'none';
+  lbImg.alt = img.filename;
+  lbInfo.textContent = img.filename + ' · ' + (i+1) + ' de ' + extImages.length;
+  lbPos.textContent = (i+1) + ' / ' + extImages.length;
+  lbUrl.textContent = img.url;
+  lbIdx = i;
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== document.getElementById('lightbox') && e.target !== document.getElementById('lightbox-close')) return;
+  document.getElementById('lightbox').classList.remove('open');
+  document.removeEventListener('keydown', lbKeyHandler);
+}
+
+function lightboxStep(dir) {
+  lbIdx = (lbIdx + dir + extImages.length) % extImages.length;
+  showLightboxAt(lbIdx);
+}
+
+function lbKeyHandler(e) {
+  if (e.key === 'ArrowRight') lightboxStep(1);
+  if (e.key === 'ArrowLeft') lightboxStep(-1);
+  if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('open'); document.removeEventListener('keydown', lbKeyHandler); }
+}
+
+function copyUrlLb(e) {
+  e && e.stopPropagation();
+  const url = extImages[lbIdx]?.url || '';
+  navigator.clipboard.writeText(url).then(() => showToast('✓ URL copiada'));
+}
+
+function selAll() { extImages.forEach((_,i)=>selImgs.add(i)); document.querySelectorAll('.img-th').forEach(t=>t.classList.add('sel')); }
+function selNone() { selImgs.clear(); document.querySelectorAll('.img-th').forEach(t=>t.classList.remove('sel')); }
+function copyExtUrls() { cp(extImages.filter((_,i)=>selImgs.has(i)).map(img=>img.url).join('\n')); }
+async function downloadSel() {
+  const sel = extImages.filter((_,i)=>selImgs.has(i));
+  if (!sel.length) { showToast('⚠ Selecciona al menos una imagen'); return; }
+  showToast(`⬇ Descargando ${sel.length} imágenes…`);
+  for (const img of sel) {
+    try {
+      const a = document.createElement('a'); a.href = img.url; a.download = img.filename; a.target='_blank';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      await new Promise(r=>setTimeout(r,280));
+    } catch(e){}
+  }
+  showToast(`✓ ${sel.length} imágenes descargadas`);
+}
+
+function useExtInProp() {
+  if (!window._lastExt) return;
+  openPropMo();
+  setTimeout(() => {
+    const r = window._lastExt, p = r.property || {};
+    if (p.m2) { $('pp-m2').value = p.m2; }
+    if (p.rooms) { $('pp-h').value = p.rooms; }
+    if (p.bathrooms) { $('pp-b').value = p.bathrooms; }
+    if (p.price) { $('pp-pr').value = p.price; }
+    if (p.address) $('pp-via').value = p.address;
+    if (p.city) $('pp-loc').value = p.city;
+    if (p.neighborhood) $('pp-barrio').value = p.neighborhood;
+    $('url-id').value = r.listingUrl;
+    $('pp-urlp').value = r.listingUrl;
+    // Import images
+    propImgs = r.images.slice(0, 20).map(img => img.url);
+    renderImgPrev();
+    const hint = $('ext-import-hint');
+    if (hint) { hint.style.display='block'; hint.textContent=`✓ ${propImgs.length} imágenes importadas desde el Extractor`; }
+    showToast(`✓ Datos y ${propImgs.length} imágenes importadas al formulario`);
+  }, 400);
+}
+
+// ════════════════════════════════════════════════
+// AUTO-FILL FROM URL — Real AI extraction
+// ════════════════════════════════════════════════
+async function doAutoFill() {
+  const url = $('url-id').value.trim();
+  if (!url || !url.includes('idealista')) { setSt('url-st','err','⚠ Introduce una URL válida de Idealista'); return; }
+  const btn = $('btn-af');
+  btn.disabled = true; btn.textContent = '⏳ Extrayendo…';
+  $('prop-load').classList.add('show');
+  $('prop-load-t').textContent = 'Extrayendo datos reales de Idealista con IA…';
+  setSt('url-st','ld','⏳ Consultando Idealista…');
+  $('url-pb').style.display = 'block';
+  progAnim('url-pf', 85, 3500);
+
+  try {
+    const prompt = `Busca en internet este anuncio de Idealista y extrae los datos REALES: ${url}\n\nINSTRUCCIONES CRITICAS:\n1. Accede a la URL usando la herramienta de busqueda web\n2. Lee el precio EXACTO que aparece en el anuncio (numero entero como 8000, no estimes)\n3. Lee los metros cuadrados EXACTOS (ej: 262)\n4. Lee el numero de habitaciones EXACTO\n\nResponde SOLO con JSON valido, sin texto adicional ni markdown:\n{"tipo":"Piso","operacion":"Alquiler","tipo_alquiler":"Residencial","precio":0,"m2":0,"m2_utiles":null,"habitaciones":0,"banos":0,"localidad":"","via":"","numero":"","planta":null,"barrio":"","estado":"Buen estado","ascensor":"Si","fachada":"Exterior","equipamiento":"Amueblado","calefaccion":null,"extras":[],"orientacion":[],"energia":"En tramite","descripcion_original":""}\n\nIMPORTANTE: precio, m2 y habitaciones son los valores EXACTOS del anuncio.`;
+
+    const { txt } = await callClaude({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+    });
+    const jm = txt.match(/\{[\s\S]*"m2"[\s\S]*\}/);
+    if (!jm) throw new Error('No se pudieron extraer datos del anuncio');
+    const d = JSON.parse(jm[0]);
+
+    // Fill all fields with REAL extracted data
+    if (d.tipo) selRadio('tipo', d.tipo);
+    if (d.operacion) selRadio('op', d.operacion);
+    if (d.tipo_alquiler) selRadio('ta', d.tipo_alquiler);
+    if (d.estado) selRadio('est', d.estado);
+    if (d.ascensor) selRadio('asc', d.ascensor);
+    if (d.fachada) selRadio('fc', d.fachada);
+    if (d.equipamiento) selRadio('eq', d.equipamiento);
+
+    const fv = (id, v) => { if (v !== null && v !== undefined && $( id)) $(id).value = v; };
+    fv('pp-loc', d.localidad);
+    fv('pp-via', d.via);
+    fv('pp-num', d.numero);
+    fv('pp-barrio', d.barrio);
+    fv('pp-m2', d.m2);        // EXACT m2 from listing
+    fv('pp-m2u', d.m2_utiles);
+    fv('pp-h', d.habitaciones); // EXACT rooms from listing
+    fv('pp-b', d.banos);
+    fv('pp-pr', d.precio);    // EXACT price from listing
+    fv('pp-urlp', url);
+    if (d.planta) $('pp-pl').value = d.planta;
+    if (d.calefaccion) $('pp-cal').value = d.calefaccion;
+    if (d.energia) $('pp-en').value = d.energia;
+    if (d.extras && d.extras.length) d.extras.forEach(e => checkExtra('pp-ex', e));
+    if (d.orientacion && d.orientacion.length) d.orientacion.forEach(o => checkExtra('pp-or', o));
+
+    window._extractedProp = d;
+    progAnim('url-pf', 100, 300);
+    setTimeout(() => { $('url-pb').style.display = 'none'; }, 700);
+    setSt('url-st','ok',`✓ Datos extraídos: €${d.precio?.toLocaleString('es-ES')||'?'} · ${d.m2||'?'}m² · ${d.habitaciones||'?'} hab · ${d.banos||'?'} baños`);
+
+    // Auto-generate professional description
+    await doGenDesc(d);
+    showToast(`✓ Auto-rellenado: €${d.precio?.toLocaleString('es-ES')} · ${d.m2}m²`);
+
+  } catch(e) {
+    setSt('url-st','err','⚠ '+e.message+' · Rellena los campos manualmente');
+    showToast('⚠ Error al extraer. Rellena manualmente.');
+  } finally {
+    $('prop-load').classList.remove('show');
+    btn.disabled = false; btn.textContent = '✨ Extraer y Rellenar';
+  }
+}
+
+function selRadio(name, val) {
+  const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+  if (!el) return;
+  el.checked = true;
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+    r.closest('.rg-i').classList.toggle('sel', r === el);
+  });
+}
+function checkExtra(groupId, val) {
+  const cb = document.querySelector(`#${groupId} input[value="${val}"]`);
+  if (cb) { cb.checked = true; cb.closest('.rg-i').classList.add('sel'); }
+}
+
+// ════════════════════════════════════════════════
+// AI DESCRIPTION GENERATOR — Professional, no "particular"
+// ════════════════════════════════════════════════
+async function doGenDesc(extractedData) {
+  const spin = $('ai-sp');
+  if (spin) { spin.style.display = 'block'; }
+  const ta = $('pp-desc');
+  ta.placeholder = 'Generando descripción profesional…';
+
+  // Gather form data
+  const tipo = document.querySelector('input[name="tipo"]:checked')?.value || 'Piso';
+  const op = document.querySelector('input[name="op"]:checked')?.value || 'Alquiler';
+  const ta_val = document.querySelector('input[name="ta"]:checked')?.value || 'Residencial';
+  const m2 = $('pp-m2').value;
+  const m2u = $('pp-m2u').value;
+  const h = $('pp-h').value;
+  const b = $('pp-b').value;
+  const pr = $('pp-pr').value;
+  const loc = $('pp-loc').value;
+  const via = $('pp-via').value;
+  const num = $('pp-num').value;
+  const barrio = $('pp-barrio').value;
+  const planta = $('pp-pl').value;
+  const est = document.querySelector('input[name="est"]:checked')?.value || '';
+  const fc = document.querySelector('input[name="fc"]:checked')?.value || '';
+  const asc = document.querySelector('input[name="asc"]:checked')?.value || '';
+  const eq = document.querySelector('input[name="eq"]:checked')?.value || '';
+  const cal = $('pp-cal').value;
+  const ener = $('pp-en').value;
+  const extras = [...document.querySelectorAll('#pp-ex input:checked')].map(c=>c.value);
+  const orient = [...document.querySelectorAll('#pp-or input:checked')].map(c=>c.value);
+  const descOrig = extractedData?.descripcion_original || '';
+
+  const prompt = `Crea una descripción profesional e inmobiliaria para este anuncio de ${op.toLowerCase()} en Idealista. La descripción debe ser elegante, detallada y comercialmente atractiva.
+
+DATOS DEL INMUEBLE:
+- Tipo: ${tipo} en ${op} ${op==='Alquiler'?'('+ta_val+')':''}
+- Precio: €${Number(pr||0).toLocaleString('es-ES')}${op==='Alquiler'?'/mes':''}
+- Localización: ${via?via+' '+num+',':''} ${barrio?barrio+',':''} ${loc}
+- Superficie: ${m2}m² construidos${m2u?' / '+m2u+'m² útiles':''}
+- Distribución: ${h} habitaciones · ${b} baños
+- Planta: ${planta!=='Selecciona'?planta:''}
+- Estado: ${est} · Fachada ${fc} · Ascensor ${asc}
+- Equipamiento: ${eq}
+- Orientación: ${orient.join(', ')||'no especificada'}
+- Características adicionales: ${extras.join(', ')||'ninguna'}
+- Calefacción: ${cal||'no especificada'}
+- Certificado energético: ${ener}
+${descOrig?'- Descripción original del anuncio: '+descOrig:''}
+
+INSTRUCCIONES PARA LA DESCRIPCIÓN:
+1. Escribe en español, tono profesional e inmobiliario
+2. Empieza mencionando la ubicación y el barrio con sus ventajas (servicios, transporte, zona)
+3. Describe el inmueble con todos sus puntos fuertes
+4. Menciona la distribución, calidades y equipamiento
+5. Incluye las características especiales como terraza, garaje, etc. si las hay
+6. Termina con una frase sobre la oportunidad que representa
+7. NUNCA uses la palabra "particular", "propietario", "dueño" ni similares
+8. NO uses frases genéricas vacías como "no pierdas esta oportunidad"
+9. La descripción debe tener entre 180 y 280 palabras
+10. Párrafos cortos, máximo 3-4 líneas cada uno
+11. Al final añade en línea nueva: "No se aceptan agencias."
+
+Responde ÚNICAMENTE con el texto de la descripción, sin títulos, sin comillas, sin formato especial.`;
+
+  try {
+    const { txt: text } = await callClaude({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 800
+    });
+    ta.value = text.trim();
+    showToast('✓ Descripción generada · Revísala y edítala si quieres');
+  } catch(e) {
+    ta.value = genDescLocal();
+    showToast('⚠ API no disponible · Descripción generada localmente');
+  } finally {
+    if (spin) spin.style.display = 'none';
+  }
+}
+
+function genDescLocal() {
+  const tipo = document.querySelector('input[name="tipo"]:checked')?.value || 'Inmueble';
+  const op = document.querySelector('input[name="op"]:checked')?.value || 'Alquiler';
+  const m2 = $('pp-m2').value || '?';
+  const h = $('pp-h').value || '?';
+  const b = $('pp-b').value || '?';
+  const pr = $('pp-pr').value;
+  const loc = $('pp-loc').value || 'Madrid';
+  const barrio = $('pp-barrio').value;
+  const via = $('pp-via').value;
+  const fc = document.querySelector('input[name="fc"]:checked')?.value || 'exterior';
+  const asc = document.querySelector('input[name="asc"]:checked')?.value || 'Sí';
+  const extras = [...document.querySelectorAll('#pp-ex input:checked')].map(c=>c.value);
+  const eq = document.querySelector('input[name="eq"]:checked')?.value || '';
+  const ener = $('pp-en').value;
+
+  const zona = barrio ? `en el barrio de ${barrio}, ${loc}` : `en ${loc}`;
+  const ubicTxt = via ? `situado en ${via}` : '';
+  const extrasTxt = extras.length ? `\n\nEntre sus características destacan: ${extras.join(', ')}.` : '';
+
+  return `Excelente ${tipo.toLowerCase()} en ${op.toLowerCase()} ${zona}, ${ubicTxt}${ubicTxt?',':''} en una de las zonas más valoradas de la ciudad por su conectividad, servicios y calidad de vida. La zona cuenta con excelentes conexiones de transporte público, colegios, comercios y restaurantes a escasos minutos a pie.
+
+El inmueble dispone de ${m2}m² distribuidos en ${h} habitación${Number(h)>1?'es':''} y ${b} baño${Number(b)>1?'s':''}. ${fc === 'Exterior' ? 'Orientado al exterior, disfruta de excelente luminosidad natural a lo largo del día.' : 'Distribución interior bien aprovechada y funcional.'} ${asc === 'Sí' ? 'Cuenta con ascensor en el edificio.' : ''}${extrasTxt}
+
+${eq === 'Amueblado' ? 'Se alquila completamente amueblado y equipado, listo para entrar a vivir.' : eq === 'Cocina equipada' ? 'Cocina totalmente equipada incluida.' : ''}${ener && ener !== 'En trámite' ? ` Certificado energético clase ${ener}.` : ''}
+
+Precio: €${Number(pr||0).toLocaleString('es-ES')}${op==='Alquiler'?'/mes':''}. Disponibilidad inmediata. Para más información o visitas, contactar por los medios indicados.
+
+No se aceptan agencias.`;
+}
+
+// ════════════════════════════════════════════════
+// MODAL HANDLERS
+// ════════════════════════════════════════════════
+function openPropMo() {
+  const mo = $('mo-prop');
+  mo.classList.add('open');
+  // Populate cuenta select
+  const sel = $('pp-c');
+  sel.innerHTML = '<option value="">— Seleccionar —</option>';
+  cuentas.forEach(c => {
+    const u = props.filter(p=>p.cId===c.id).length;
+    if (u < 2) {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = `${c.nombre} · ${c.ip||'Sin IP'} (${u}/2)`;
+      sel.appendChild(o);
+    }
+  });
+  // Auto ref
+  const n = props.length + 1;
+  $('pp-ref').value = `ZP-${String(n).padStart(3,'0')}`;
+  propImgs = [];
+  renderImgPrev();
+  $('url-st').className = 'url-st'; $('url-st').textContent = '';
+  $('url-pb').style.display = 'none';
+  $('url-pf').style.width = '0';
+  $('ai-sp').style.display = 'none';
+}
+
+function closeMo(id) { $('mo-'+id).classList.remove('open'); }
+
+let _editCuentaId=null;
+function _fillIpSelect(excludeId){
+  const sel=$('c-ip');
+  const used=cuentas.filter(c=>c.id!==excludeId).map(c=>c.ip).filter(Boolean);
+  sel.innerHTML='<option value="">— Sin IP —</option>';
+  IPS.forEach(ip=>{const o=document.createElement('option');o.value=ip;o.textContent=ip+(used.includes(ip)?' (en uso)':'');if(used.includes(ip))o.style.color='var(--rd)';sel.appendChild(o);});
+}
+function openCuentaMo() {
+  _editCuentaId=null;
+  const mt=document.querySelector('#mo-cuenta .mo-title');
+  if(mt)mt.textContent='👤 Nueva Cuenta';
+  ['c-nom','c-gm','c-pw','c-fa','c-tel','c-n'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  _fillIpSelect(null);
+  $('mo-cuenta').classList.add('open');
+}
+function editCuenta(i){
+  const c=cuentas[i];
+  _editCuentaId=c.id;
+  const mt=document.querySelector('#mo-cuenta .mo-title');
+  if(mt)mt.textContent='✏ Editar Cuenta';
+  $('c-nom').value=c.nombre||'';
+  $('c-gm').value=c.gmail||'';
+  $('c-pw').value=c.pass!=='—'?c.pass:'';
+  $('c-fa').value=c.fa!=='—'?c.fa:'';
+  $('c-tel').value=c.tel||'';
+  $('c-n').value=c.notas||'';
+  _fillIpSelect(c.id);
+  $('c-ip').value=c.ip||'';
+  $('mo-cuenta').classList.add('open');
+}
+
+function openLeadMo() {
+  $('mo-lead').classList.add('open');
+  const sel = $('l-pr');
+  sel.innerHTML = '<option value="">— Sin propiedad —</option>';
+  props.forEach(p => { const o = document.createElement('option'); o.value=p.id; o.textContent=`${p.ref} · ${p.tipo} ${p.loc}`; sel.appendChild(o); });
+}
+
+function updCInfo() {
+  const id = $('pp-c').value;
+  const c = cuentas.find(x=>x.id===id);
+  if (!c) { $('pp-ci').textContent='Selecciona una cuenta'; $('pp-em').value=''; return; }
+  const u = props.filter(p=>p.cId===c.id).length;
+  $('pp-ci').innerHTML = `<span style="color:var(--ac)">${c.ip||'Sin IP'}</span> · Slots: ${u}/2 · AS5511 Naranja`;
+  $('pp-em').value = c.gmail;
+}
+
+// ════════════════════════════════════════════════
+// IMAGE UPLOAD IN FORM
+// ════════════════════════════════════════════════
+function handleImgUpload(e) {
+  const files = [...e.target.files];
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => { propImgs.push(ev.target.result); renderImgPrev(); };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderImgPrev() {
+  const grid = $('img-prev');
+  if (!propImgs.length) { grid.innerHTML = ''; return; }
+  grid.innerHTML = propImgs.map((src,i) =>
+    `<div class="img-prev-item">
+      <img src="${src}" alt="img ${i+1}" onerror="this.style.display='none'"/>
+      <div class="img-prev-rm" onclick="removeImg(${i})">✕</div>
+    </div>`
+  ).join('');
+}
+
+function removeImg(i) { propImgs.splice(i, 1); renderImgPrev(); }
+
+// ════════════════════════════════════════════════
+// SAVE PROP
+// ════════════════════════════════════════════════
+function saveProp() {
+  const cId = $('pp-c').value;
+  const loc = $('pp-loc').value;
+  if (!cId) { showToast('⚠ Selecciona una cuenta'); return; }
+  if (!loc) { showToast('⚠ Introduce la localidad'); return; }
+  const u = props.filter(p=>p.cId===cId).length;
+  if (u >= 2) { showToast('⚠ Esta cuenta ya tiene 2 propiedades'); return; }
+
+  const p = {
+    id: 'p'+Date.now(),
+    cId,
+    tipo: document.querySelector('input[name="tipo"]:checked')?.value||'Piso',
+    op: document.querySelector('input[name="op"]:checked')?.value||'Alquiler',
+    ta: document.querySelector('input[name="ta"]:checked')?.value||'Residencial',
+    loc: $('pp-loc').value,
+    via: $('pp-via').value,
+    num: $('pp-num').value,
+    planta: $('pp-pl').value,
+    puerta: $('pp-pu').value,
+    barrio: $('pp-barrio').value,
+    m2: $('pp-m2').value,
+    m2u: $('pp-m2u').value,
+    h: $('pp-h').value,
+    b: $('pp-b').value,
+    est: document.querySelector('input[name="est"]:checked')?.value||'',
+    fc: document.querySelector('input[name="fc"]:checked')?.value||'',
+    asc: document.querySelector('input[name="asc"]:checked')?.value||'',
+    eq: document.querySelector('input[name="eq"]:checked')?.value||'',
+    cal: $('pp-cal').value,
+    en: $('pp-en').value,
+    extras: [...document.querySelectorAll('#pp-ex input:checked')].map(c=>c.value),
+    orient: [...document.querySelectorAll('#pp-or input:checked')].map(c=>c.value),
+    pr: $('pp-pr').value,
+    ref: $('pp-ref').value,
+    desc: $('pp-desc').value,
+    urlP: $('pp-urlp').value,
+    em: $('pp-em').value,
+    tel: $('pp-tel').value,
+    images: [...propImgs],
+    fecha: new Date().toLocaleDateString('es-ES'),
+  };
+  props.push(p);
+  saveAll();
+  closeMo('prop');
+  showToast(`✓ Propiedad ${p.ref} guardada`);
+  renderProps();
+  renderDash();
+  set('nb-p', props.length);
+}
+
+// ════════════════════════════════════════════════
+// SAVE CUENTA
+// ════════════════════════════════════════════════
+function saveCuenta() {
+  const nom = $('c-nom').value.trim();
+  const gm = $('c-gm').value.trim();
+  if (!nom || !gm) { showToast('⚠ Nombre y Gmail son obligatorios'); return; }
+  if(_editCuentaId){
+    const idx=cuentas.findIndex(c=>c.id===_editCuentaId);
+    if(idx!==-1){
+      const prev=cuentas[idx];
+      const newPw=$('c-pw').value; const newFa=$('c-fa').value;
+      cuentas[idx]={...prev,nombre:nom,gmail:gm,
+        pass:newPw?newPw:prev.pass,
+        fa:newFa?newFa:prev.fa,
+        ip:$('c-ip').value,tel:$('c-tel').value,notas:$('c-n').value};
+    }
+    _editCuentaId=null;
+    showToast('✓ Cuenta actualizada: '+nom);
+  } else {
+    cuentas.push({
+      id:'c'+Date.now(), nombre:nom, gmail:gm, pass:$('c-pw').value, fa:$('c-fa').value,
+      ip:$('c-ip').value, tel:$('c-tel').value, notas:$('c-n').value,
+      ultimo_acceso:null, estado:'activa'
+    });
+    showToast('✓ Cuenta añadida: '+nom);
+    set('nb-c', cuentas.length);
+  }
+  saveAll();
+  closeMo('cuenta');
+  renderCuentas(); renderDash();
+}
+
+// ════════════════════════════════════════════════
+// SAVE LEAD
+// ════════════════════════════════════════════════
+function saveLead() {
+  const nm = $('l-nm').value.trim();
+  if (!nm) { showToast('⚠ Introduce un nombre'); return; }
+  leads.push({
+    id:'l'+Date.now(), pId:$('l-pr').value, nombre:nm, tel:$('l-tel').value,
+    em:$('l-em').value, msg:$('l-ms').value, canal:$('l-can').value,
+    estado:$('l-est').value, ag:$('l-ag').value,
+    fecha:new Date().toLocaleDateString('es-ES')
+  });
+  saveAll();
+  closeMo('lead');
+  showToast('✓ Lead registrado');
+  renderLeads(); renderDash();
+}
+
+// ════════════════════════════════════════════════
+// IMPORT LEADS
+// ════════════════════════════════════════════════
+const AG_KEYWORDS_DIRECT = ['agencia','inmobiliaria','agente','broker','intermediar','somos profesionales','cartera de clientes','tenemos clientes','nuestros clientes'];
+const AG_KEYWORDS_HIDDEN = ['para mi cliente','para un cliente','represento','en nombre de','trabajáis con agencias','¿trabajais','¿aceptáis agencias','comisión','honorarios','exclusiva','captación','captacion'];
+const AG_DOMAINS = ['inmobiliaria','remax','century21','engel','pisos.com','fotocasa','habitaclia','idealista.pro','coldwell','era.es','keller'];
+const PERSONAL_DOMAINS = ['gmail','hotmail','yahoo','outlook','icloud','live.com','me.com','proton'];
+
+function detectAgency(name, email, phone, msg) {
+  let score = 0, reason = [], type = 'no';
+  const all = ((name||'')+(email||'')+(msg||'')).toLowerCase();
+  const dom = (email||'').split('@')[1]?.toLowerCase()||'';
+
+  // Direct agency signals
+  AG_KEYWORDS_DIRECT.forEach(k => { if(all.includes(k)){score+=25;reason.push(k)} });
+  if(AG_DOMAINS.some(d=>dom.includes(d))){score+=35;reason.push('dominio corporativo: '+dom)}
+  const tel = (phone||'').replace(/\s/g,'');
+  if(/^(91|93|94|96|900|901|902|910|911|912|913|914|915|916|917|918|919)/.test(tel)){score+=20;reason.push('teléfono fijo empresarial')}
+
+  // Hidden agency signals
+  AG_KEYWORDS_HIDDEN.forEach(k => { if(all.includes(k)){score+=20;reason.push(k)} });
+  if(dom && !PERSONAL_DOMAINS.some(d=>dom.includes(d)) && dom.includes('.') && score<50){score+=15;reason.push('email corporativo')}
+
+  if(score>=70) type='directa';
+  else if(score>=45) type='encubierta';
+
+  return { type, score: Math.min(score,100), reason: reason.slice(0,3).join(' · ') };
+}
+
+function processImport() {
+  const txt = $('paste-a').value;
+  if (!txt.trim()) { showToast('⚠ Pega texto o sube un archivo primero'); return; }
+
+  const lines = txt.split('\n').filter(l=>l.trim());
+  const parsed = [];
+  let current = null;
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    // Detect email
+    const emailM = trimmed.match(/[\w.-]+@[\w.-]+\.\w{2,}/);
+    const telM = trimmed.match(/(\+?34\s?)?[6-9]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/);
+    const isHeader = emailM || telM || (trimmed.includes('·') && trimmed.length < 100);
+
+    if (isHeader) {
+      if (current) parsed.push(current);
+      const parts = trimmed.split(/[·|,]/);
+      current = {
+        nombre: (parts[0]||'').trim().replace(/email|correo/gi,'').trim() || 'Sin nombre',
+        email: emailM?emailM[0]:'',
+        tel: telM?telM[0]:'',
+        msg: '',
+      };
+    } else if (current) {
+      current.msg += (current.msg ? ' ' : '') + trimmed;
+    }
+  });
+  if (current) parsed.push(current);
+
+  if (!parsed.length) { showToast('⚠ No se detectaron leads. Revisa el formato.'); return; }
+
+  pendingImport = parsed.map(item => {
+    const det = detectAgency(item.nombre, item.email, item.tel, item.msg);
+    return { ...item, ...det };
+  });
+
+  renderImportPreview();
+}
+
+function renderImportPreview() {
+  const real = pendingImport.filter(l=>l.type==='no');
+  const ag = pendingImport.filter(l=>l.type==='directa');
+  const enc = pendingImport.filter(l=>l.type==='encubierta');
+
+  $('imp-stats').innerHTML = [
+    `<span class="chip cg" style="font-size:10px;padding:4px 10px">✓ ${real.length} clientes reales</span>`,
+    `<span class="chip cr" style="font-size:10px;padding:4px 10px">🚫 ${ag.length} agencias directas</span>`,
+    `<span class="chip cw" style="font-size:10px;padding:4px 10px">⚠ ${enc.length} agencias encubiertas</span>`,
+    `<span class="chip cgr" style="font-size:10px;padding:4px 10px">Total: ${pendingImport.length}</span>`,
+  ].join('');
+
+  $('imp-tbl').innerHTML = `<table class="tbl"><thead><tr><th>Nombre</th><th>Email</th><th>Tel.</th><th>Mensaje</th><th>Tipo</th><th>Razón</th><th>Score</th></tr></thead><tbody>`+
+    pendingImport.map(l=>{
+      const sc = l.score>=70?'sh':l.score>=45?'sm':'sl';
+      const tp = l.type==='directa'?`<span class="chip cr">🚫 Directa</span>`:l.type==='encubierta'?`<span class="chip cw">⚠ Encubierta</span>`:`<span class="chip cg">✓ Real</span>`;
+      return`<tr style="${l.type!=='no'?'opacity:.6':''}">
+        <td><strong>${l.nombre}</strong></td>
+        <td style="font-family:var(--mo);font-size:9px">${l.email}</td>
+        <td style="font-family:var(--mo);font-size:9px">${l.tel}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9.5px">"${(l.msg||'').substring(0,80)}"</td>
+        <td>${tp}</td>
+        <td style="font-family:var(--mo);font-size:8.5px;color:var(--t3)">${l.reason||'—'}</td>
+        <td><span class="score ${sc}">${l.score}</span></td>
+      </tr>`;
+    }).join('')+`</tbody></table>`;
+
+  $('imp-preview').style.display = 'block';
+}
+
+function popImpProp() {
+  const sel = $('imp-prop');
+  sel.innerHTML = '<option value="">— Sin asignar —</option>';
+  props.forEach(p => { const o = document.createElement('option'); o.value=p.id; o.textContent=`${p.ref} · ${p.tipo} ${p.loc}`; sel.appendChild(o); });
+}
+
+function confirmImport() {
+  const real = pendingImport.filter(l=>l.type==='no');
+  const pId = $('imp-prop').value;
+  real.forEach(l => leads.push({
+    id:'l'+Date.now()+Math.random(), pId, nombre:l.nombre, tel:l.tel, em:l.email,
+    msg:l.msg, canal:'Idealista', estado:'nuevo', ag:'no',
+    fecha:new Date().toLocaleDateString('es-ES')
+  }));
+  saveAll();
+  $('imp-preview').style.display='none'; $('paste-a').value=''; pendingImport=[];
+  showToast(`✓ ${real.length} leads reales importados`);
+  renderLeads(); renderDash();
+}
+
+function importAll() {
+  const pId = $('imp-prop').value;
+  pendingImport.forEach(l => leads.push({
+    id:'l'+Date.now()+Math.random(), pId, nombre:l.nombre, tel:l.tel, em:l.email,
+    msg:l.msg, canal:'Idealista', estado:'nuevo', ag:l.type,
+    fecha:new Date().toLocaleDateString('es-ES')
+  }));
+  saveAll();
+  $('imp-preview').style.display='none'; $('paste-a').value=''; pendingImport=[];
+  showToast(`✓ ${leads.length} leads importados (incl. agencias marcadas)`);
+  renderLeads(); renderDash();
+}
+
+// ════════════════════════════════════════════════
+// EXPORT PROPIEDADES PDF
+// ════════════════════════════════════════════════
+function exportPropsPDF(){
+  if(!props.length){showToast('⚠ Sin propiedades que exportar');return}
+  const safeCell=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const rows=props.map(p=>{
+    const cnt=cuentas.find(c=>c.id===p.cId);
+    const extras=(p.extras||[]).map(safeCell).join(', ');
+    const loc=[safeCell(p.loc),p.barrio?safeCell(p.barrio):'',p.via?safeCell(p.via)+(p.num?' '+safeCell(p.num):''):''].filter(Boolean).join(', ');
+    return'<tr><td>'+safeCell(p.ref)+'</td><td>'+safeCell(p.tipo)+' \xb7 '+safeCell(p.op)+'</td><td>'+loc+'</td><td>'+(safeCell(p.m2)||'\u2014')+'m\xb2</td><td>'+(safeCell(p.h)||'\u2014')+' hab \xb7 '+(safeCell(p.b)||'\u2014')+' ba\xf1os</td><td>\u20ac'+Number(p.pr||0).toLocaleString('es-ES')+(p.op==='Alquiler'?'/mes':'')+'</td><td>'+safeCell(cnt?cnt.nombre:'\u2014')+'<br><small>'+safeCell(cnt?cnt.ip||'':'')+'</small></td><td>'+(extras||'\u2014')+'</td><td>'+safeCell(p.fecha)+'</td></tr>';
+  }).join('');
+  const style='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Helvetica Neue,Arial,sans-serif;font-size:10px;color:#1a1a1a;padding:20px}h1{font-size:16px;font-weight:800;margin-bottom:4px;color:#00a07a}.sub{font-size:9px;color:#666;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#0d1a26;color:#00d4a0;font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:6px 8px;text-align:left;white-space:nowrap}td{padding:6px 8px;border-bottom:1px solid #e8ecf0;vertical-align:top;font-size:9.5px}tr:nth-child(even) td{background:#f8fafb}td:nth-child(6){font-weight:700;color:#008a65}small{font-size:8px;color:#888}.btn-print{margin-top:16px;padding:8px 18px;background:#00a07a;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}@media print{.btn-print{display:none}}';
+  const html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Zinto CRM \xb7 Propiedades</title><style>'+style+'</style></head><body>'
+    +'<h1>Zinto CRM \xb7 Inventario de Propiedades</h1>'
+    +'<div class="sub">Exportado el '+safeCell(new Date().toLocaleString('es-ES'))+' \xb7 '+props.length+' propiedad'+(props.length!==1?'es':'')+'</div>'
+    +'<table><thead><tr><th>REF</th><th>Tipo \xb7 Op.</th><th>Ubicaci\xf3n</th><th>Superficie</th><th>Dist.</th><th>Precio</th><th>Cuenta \xb7 IP</th><th>Extras</th><th>Alta</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>'
+    +'<button class="btn-print" onclick="window.print()">Imprimir / Guardar como PDF</button>'
+    +'</body></html>';
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  showToast('✓ Abierto · Usa "Imprimir" \u2192 "Guardar como PDF"');
+}
+
+// ════════════════════════════════════════════════
+// FILE IMPORT (CSV / TXT)
+// ════════════════════════════════════════════════
+function dzOver(e){e.preventDefault();$('dz').classList.add('drag')}
+function dzLeave(){$('dz').classList.remove('drag')}
+function dzDrop(e){e.preventDefault();$('dz').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)readFile(f)}
+function handleFile(e){const f=e.target.files[0];if(f)readFile(f)}
+function readFile(f){
+  const r=new FileReader();
+  r.onload=ev=>{$('paste-a').value=ev.target.result;showToast('✓ Archivo cargado: '+f.name)};
+  r.readAsText(f,'UTF-8');
+}
+
+// ════════════════════════════════════════════════
+// EXPORT CSV
+// ════════════════════════════════════════════════
+function exportCSV() {
+  const rows = [
+    ['#','Nombre','Gmail','IP','Slots Usados','Estado','Último Acceso'],
+    ...cuentas.map((c,i)=>[pad(i+1),c.nombre,c.gmail,c.ip,props.filter(p=>p.cId===c.id).length,c.estado,c.ultimo_acceso||'Nunca'])
+  ];
+  const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='zinto-cuentas-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  showToast('✓ CSV exportado');
+}
+
+// ════════════════════════════════════════════════
+// RADIO TOGGLE VISUAL
+// ════════════════════════════════════════════════
+document.addEventListener('change', e => {
+  if (e.target.type === 'radio') {
+    const name = e.target.name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+      r.closest('.rg-i')?.classList.toggle('sel', r.checked);
+    });
+  }
+  if (e.target.type === 'checkbox') {
+    e.target.closest('.rg-i')?.classList.toggle('sel', e.target.checked);
+  }
+});
+
+
+
+// ════════════════════════════════════════════════
+// TAB SWITCHERS
+// ════════════════════════════════════════════════
+function switchAfTab(mode) {
+  document.querySelectorAll('.af-tab').forEach(t => {
+    t.style.background = '';
+    t.style.color = 'var(--t4)';
+    t.style.borderColor = 'var(--b1)';
+  });
+  const activeTab = mode === 'paste' ? $('tab-paste') : $('tab-api');
+  if (activeTab) {
+    activeTab.style.background = 'var(--acd)';
+    activeTab.style.color = 'var(--ac)';
+    activeTab.style.borderColor = 'rgba(0,212,160,.3)';
+  }
+  $('af-paste-mode').style.display = mode === 'paste' ? 'block' : 'none';
+  $('af-api-mode').style.display = mode === 'api' ? 'block' : 'none';
+  if (mode === 'api') {
+    const saved = getApiKey();
+    if (saved && $('api-key-mo')) $('api-key-mo').value = saved;
+  }
+}
+
+function switchExtTab(mode) {
+  ['etab-paste','etab-api'].forEach(id => {
+    const t = $(id);
+    if (!t) return;
+    t.style.background = '';
+    t.style.color = 'var(--t4)';
+    t.style.borderColor = 'var(--b1)';
+  });
+  const at = mode === 'paste' ? $('etab-paste') : $('etab-api');
+  if (at) { at.style.background = 'var(--acd)'; at.style.color = 'var(--ac)'; at.style.borderColor = 'rgba(0,212,160,.3)'; }
+  $('ext-paste-mode').style.display = mode === 'paste' ? 'block' : 'none';
+  $('ext-api-mode').style.display = mode === 'api' ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════
+// PARSE MANUAL TEXT — No API needed
+// ════════════════════════════════════════════════
+function parseManual() {
+  const txt = ($('af-paste-txt') || {value:''}).value.trim();
+  if (!txt) { setSt('parse-st','err','⚠ Pega el texto del anuncio primero'); return; }
+
+  setSt('parse-st','ld','⚡ Analizando texto…');
+
+  try {
+    const d = extractFromText(txt);
+
+    // Fill radios
+    if (d.tipo) selRadio('tipo', d.tipo);
+    if (d.op) selRadio('op', d.op);
+    if (d.ta) selRadio('ta', d.ta);
+    if (d.est) selRadio('est', d.est);
+    if (d.asc) selRadio('asc', d.asc);
+    if (d.fc) selRadio('fc', d.fc);
+    if (d.eq) selRadio('eq', d.eq);
+
+    // Fill inputs
+    const fv = (id, v) => { if (v && $(id)) $(id).value = v; };
+    fv('pp-m2', d.m2);
+    fv('pp-m2u', d.m2u);
+    fv('pp-h', d.h);
+    fv('pp-b', d.b);
+    fv('pp-pr', d.pr);
+    fv('pp-loc', d.loc);
+    fv('pp-via', d.via);
+    fv('pp-num', d.num);
+    fv('pp-barrio', d.barrio);
+    if (d.planta && d.planta !== 'Selecciona') {
+      const sel = $('pp-pl');
+      if (sel) { for (const o of sel.options) { if (o.text.includes(d.planta) || o.value.includes(d.planta)) { sel.value = o.value; break; } } }
+    }
+    if (d.extras) d.extras.forEach(e => checkExtra('pp-ex', e));
+    if (d.orient) d.orient.forEach(o => checkExtra('pp-or', o));
+
+    // Auto-generate desc from extracted data
+    const filled = [d.m2 && 'm²', d.h && 'hab', d.b && 'baños', d.pr && 'precio'].filter(Boolean);
+    setSt('parse-st','ok', `✓ Extraídos: ${filled.join(' · ')} — Genera la descripción con IA ↓`);
+
+    // Build description locally
+    const desc = buildDesc(d, txt);
+    if ($('pp-desc') && !$('pp-desc').value) $('pp-desc').value = desc;
+
+    showToast(`✓ Campos rellenados: €${Number(d.pr||0).toLocaleString('es-ES')} · ${d.m2||'?'}m² · ${d.h||'?'} hab`);
+
+  } catch(e) {
+    setSt('parse-st','err','⚠ No se pudieron extraer datos. Rellena los campos manualmente.');
+  }
+}
+
+function extractFromText(txt) {
+  const t = txt.toLowerCase();
+  const d = {};
+
+  // PRECIO — busca patrones como "8.000 €/mes", "8000€", "8.000€/mes", "precio: 8.000"
+  let prM = txt.match(/(\d{1,3}(?:[.,]\d{3})*)\s*€(?:\/mes)?/) ||
+             txt.match(/precio[:\s]+(\d{1,3}(?:[.,]\d{3})*)/i) ||
+             txt.match(/(\d{4,7})\s*(?:€|euros)/i);
+  if (prM) d.pr = prM[1].replace(/\./g,'').replace(',','.');
+
+  // M2 — busca "262 m²", "262m2", "262 metros"
+  let m2M = txt.match(/(\d{2,4})\s*m[²2]/i) ||
+             txt.match(/(\d{2,4})\s*metros?\s*(?:cuadrados?)?/i) ||
+             txt.match(/superficie[:\s]+(\d{2,4})/i);
+  if (m2M) d.m2 = m2M[1];
+
+  // M2 útiles
+  let m2uM = txt.match(/(\d{2,4})\s*m[²2]\s*[úu]tiles?/i) ||
+              txt.match(/[úu]tiles?[:\s]+(\d{2,4})/i);
+  if (m2uM) d.m2u = m2uM[1];
+
+  // HABITACIONES
+  let hM = txt.match(/(\d{1,2})\s*hab(?:itaciones?)?/i) ||
+            txt.match(/(\d{1,2})\s*dormitorios?/i) ||
+            txt.match(/(\d{1,2})\s*cuartos?/i);
+  if (hM) d.h = hM[1];
+
+  // BAÑOS
+  let bM = txt.match(/(\d{1,2})\s*ba[ñn]os?/i) ||
+            txt.match(/(\d{1,2})\s*aseos?/i);
+  if (bM) d.b = bM[1];
+
+  // TIPO INMUEBLE
+  if (/[áa]tico/i.test(t)) d.tipo = 'Ático';
+  else if (/chalet|villa|unifamiliar/i.test(t)) d.tipo = 'Chalet';
+  else if (/d[úu]plex/i.test(t)) d.tipo = 'Dúplex';
+  else if (/estudio/i.test(t)) d.tipo = 'Estudio';
+  else if (/local|comercial/i.test(t)) d.tipo = 'Local';
+  else d.tipo = 'Piso';
+
+  // OPERACIÓN
+  d.op = /venta|compra|en venta/i.test(t) ? 'Venta' : 'Alquiler';
+  if (/temporada|vacacional/i.test(t)) d.ta = 'Temporada';
+  else if (/vacacional/i.test(t)) d.ta = 'Vacacional';
+  else d.ta = 'Residencial';
+
+  // PLANTA
+  let plM = txt.match(/(\d+)[ºª]\s*planta/i) ||
+             txt.match(/planta\s*(\d+)/i) ||
+             txt.match(/(bajo|entreplanta|[áa]tico)/i);
+  if (plM) {
+    const pv = plM[1];
+    if (pv === 'bajo' || pv === 'Bajo') d.planta = 'Bajo';
+    else if (/entreplanta/i.test(pv)) d.planta = 'Entreplanta';
+    else d.planta = pv + 'ª';
+  }
+
+  // LOCALIDAD — busca nombres de ciudades comunes
+  const cities = ['Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Málaga','Murcia','Palma','Las Palmas','Bilbao','Alicante','Córdoba','Valladolid','Vigo','Gijón','Vitoria','Granada','Elche','Oviedo','Badalona','Terrassa','Cartagena','Jerez','Sabadell','Móstoles','Fuenlabrada','Almería','Santander','Burgos','Albacete'];
+  for (const c of cities) { if (txt.includes(c)) { d.loc = c; break; } }
+
+  // VÍA — busca "Calle X", "Avenida X", "Paseo X", etc.
+  let viaM = txt.match(/(calle|avda?\.?|avenida|paseo|plaza|ronda|camino|carrera|glorieta|bulevar)\s+(?:de\s+(?:la\s+|los\s+|el\s+)?)?([A-ZÁÉÍÓÚÑ][a-záéíóúñ\s]{2,30})/i);
+  if (viaM) d.via = (viaM[1] + ' ' + viaM[2]).trim();
+
+  // NÚMERO
+  let numM = txt.match(/(?:n[úu]m(?:ero)?\.?\s*|,\s*)(\d{1,3}(?:\s*[,\-]\s*\d+)?)\s*(?:,|$)/);
+  if (numM) d.num = numM[1];
+
+  // BARRIO / ZONA
+  const barrios = ['Salamanca','Chamberí','Retiro','Centro','Chamartín','Moncloa','Arganzuela','Carabanchel','Latina','Fuencarral','Moratalaz','Vallecas','Hortaleza','Barajas','Puente de Vallecas','Gracia','Eixample','Sarrià','Gràcia','Sants','Barceloneta','Poblenou','Macarena','Triana','Nervión','Casco Antiguo'];
+  for (const b of barrios) { if (txt.includes(b)) { d.barrio = b; break; } }
+
+  // ESTADO
+  d.est = /reformar|reformado|necesita reforma|para reformar/i.test(t) ? 'A reformar' : 'Buen estado';
+
+  // FACHADA
+  d.fc = /interior/i.test(t) ? 'Interior' : 'Exterior';
+
+  // ASCENSOR
+  d.asc = /sin ascensor|no tiene ascensor/i.test(t) ? 'No' : 'Sí';
+
+  // EQUIPAMIENTO
+  if (/sin equipar|sin amueblar/i.test(t)) d.eq = 'Sin equipar';
+  else if (/cocina equipada|solo cocina/i.test(t)) d.eq = 'Cocina equipada';
+  else d.eq = 'Amueblado';
+
+  // EXTRAS
+  d.extras = [];
+  if (/terraza/i.test(t)) d.extras.push('Terraza');
+  if (/balc[óo]n/i.test(t)) d.extras.push('Balcón');
+  if (/trastero/i.test(t)) d.extras.push('Trastero');
+  if (/garaje|cochera|plaza de parking|parking/i.test(t)) d.extras.push(t.includes('garaje') ? 'Cochera' : 'Parking');
+  if (/piscina/i.test(t)) d.extras.push('Piscina');
+  if (/jard[íi]n/i.test(t)) d.extras.push('Jardín');
+  if (/armarios?\s*empotrados?/i.test(t)) d.extras.push('Armarios empotrados');
+  if (/aire\s*acondicionado|a\/c|a\.a\./i.test(t)) d.extras.push('Aire acondicionado');
+
+  // ORIENTACIÓN
+  d.orient = [];
+  if (/orientaci[oó]n\s*norte|norte/i.test(t)) d.orient.push('Norte');
+  if (/orientaci[oó]n\s*sur|sur/i.test(t)) d.orient.push('Sur');
+  if (/orientaci[oó]n\s*este|este/i.test(t)) d.orient.push('Este');
+  if (/orientaci[oó]n\s*oeste|oeste/i.test(t)) d.orient.push('Oeste');
+
+  return d;
+}
+
+function buildDesc(d, rawTxt) {
+  const tipo = d.tipo || 'Piso';
+  const op = d.op || 'Alquiler';
+  const loc = d.loc || 'la ciudad';
+  const barrio = d.barrio || '';
+  const via = d.via || '';
+  const m2 = d.m2 || '?';
+  const h = d.h || '?';
+  const b = d.b || '?';
+  const pr = d.pr ? `€${Number(d.pr).toLocaleString('es-ES')}${op==='Alquiler'?'/mes':''}` : '';
+  const fc = d.fc || 'Exterior';
+  const asc = d.asc || 'Sí';
+  const eq = d.eq || '';
+  const extras = d.extras || [];
+
+  const zona = barrio ? `en el exclusivo barrio de ${barrio}, ${loc}` : `en ${loc}`;
+  const extrasTxt = extras.length ? `
+
+Entre sus características destacan: ${extras.join(', ')}.` : '';
+  const eqTxt = eq === 'Amueblado' ? 'Se entrega completamente amueblado y equipado, listo para entrar a vivir.' :
+                eq === 'Cocina equipada' ? 'Cuenta con cocina totalmente equipada.' : '';
+  const fachadaTxt = fc === 'Exterior' ? 'De fachada exterior, goza de excelente luminosidad natural durante todo el día.' : 'Distribución interior aprovechada y funcional.';
+  const ascTxt = asc === 'Sí' ? ' Edificio con ascensor.' : '';
+
+  return `Magnífico ${tipo.toLowerCase()} en ${op.toLowerCase()} ${zona}, ${via ? 'en ' + via + ',' : ''} una de las zonas más demandadas y bien comunicadas de la ciudad. La zona cuenta con acceso inmediato a transporte público, colegios de prestigio, comercios, restaurantes y todos los servicios necesarios para el día a día.
+
+El inmueble dispone de ${m2}m² distribuidos de forma eficiente en ${h} habitación${Number(h)>1?'es':''} y ${b} baño${Number(b)>1?'s':''}. ${fachadaTxt}${ascTxt}${extrasTxt}
+
+${eqTxt}${pr ? ' Precio: ' + pr + '.' : ''} Disponibilidad inmediata. Para más información o concertar visita, contacta por los medios indicados.
+
+No se aceptan agencias.`;
+}
+
+// ════════════════════════════════════════════════
+// PARSE PASTED IMAGE URLS — No API needed
+// ════════════════════════════════════════════════
+function parsePastedUrls() {
+  const raw = ($('ext-paste-urls') || {value:''}).value.trim();
+  const source = ($('ext-src-p') || {value:'idealista'}).value;
+  const listingUrl = ($('ext-listing-url') || {value:''}).value.trim() || 'manual';
+  if (!raw) { showToast('⚠ Pega las URLs primero'); return; }
+
+  const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l.startsWith('http'));
+  if (!lines.length) { showToast('⚠ No se encontraron URLs válidas'); return; }
+
+  const normalized = normalizeImgUrls(
+    lines.map((url, i) => ({ n: i+1, url, filename: `IMG_${String(i+1).padStart(3,'0')}.jpg` })),
+    source
+  );
+
+  if (!normalized.length) {
+    setSt('ext-st','err',`⚠ Ninguna URL pasó el filtro de ${source}. Verifica el formato.`);
+    return;
+  }
+
+  const result = { source, listingUrl, images: normalized, count: normalized.length };
+  extImages = normalized;
+  selImgs = new Set(normalized.map((_,i)=>i));
+  renderExtGrid(result);
+  setSt('ext-st','ok',`✓ ${normalized.length} imágenes normalizadas`);
+  $('ext-json-wrap').style.display = 'block';
+  $('ext-json').value = JSON.stringify(result, null, 2);
+  window._lastExt = result;
+  showToast(`✓ ${normalized.length} imágenes listas`);
+}
+
+// ════════════════════════════════════════════════
+// API KEY & PROXY — helpers
+// ════════════════════════════════════════════════
+// La key se guarda en localStorage — el usuario la pega una vez en el modal
+function getApiKey() {
+  return localStorage.getItem('zinto_api_key') || localStorage.getItem('zk') || '';
+}
+function saveApiKey(val) {
+  localStorage.setItem('zinto_api_key', val.trim());
+  localStorage.setItem('zk', val.trim());
+  const st = $('api-status');
+  if (st) { if (val.trim()) { st.textContent = '✓ Guardada'; st.style.color = 'var(--ac)'; } else { st.textContent = ''; } }
+}
+// URL del proxy — se puede sobreescribir en localStorage('zinto_proxy_url')
+function getProxyUrl() {
+  return localStorage.getItem('zinto_proxy_url') || 'https://zinto-claude-proxy.benjamincousino1.workers.dev/';
+}
+
+// ════════════════════════════════════════════════
+// TEST API KEY (usa el proxy)
+// ════════════════════════════════════════════════
+async function testKey() {
+  const key = ($('api-key-mo')||{value:''}).value.trim() || getApiKey();
+  const st = $('key-st');
+  if (!key) { if(st){st.textContent='⚠ Sin key';st.style.color='var(--rd)';} return; }
+  // guardar siempre que se prueba
+  localStorage.setItem('zk', key); localStorage.setItem('zinto_api_key', key);
+  if(st){st.textContent='⏳…';st.style.color='var(--wn)';}
+  try {
+    const r = await fetch(getProxyUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Anthropic-Key':key},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:5,messages:[{role:'user',content:'Hi'}]})
+    });
+    if(r.ok){if(st){st.textContent='✅ OK';st.style.color='var(--ac)';}}
+    else{const e=await r.json();if(st){st.textContent='❌ '+(e.error?.message||r.status);st.style.color='var(--rd)';}}
+  } catch(e){if(st){st.textContent='❌ '+e.message;st.style.color='var(--rd)';}}
+}
+async function testApiKey() {
+  const key = getApiKey();
+  const st = $('api-status');
+  if (!key) { if(st){st.textContent='⚠ Introduce una API key';st.style.color='var(--rd)';} return; }
+  if(st){st.textContent='⏳ Probando…';st.style.color='var(--wn)';}
+  try {
+    const r = await fetch(getProxyUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Anthropic-Key':key},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
+    });
+    if(r.ok){if(st){st.textContent='✅ Conexión OK';st.style.color='var(--ac)';}}
+    else{const e=await r.json();if(st){st.textContent='❌ Error: '+(e.error?.message||r.status);st.style.color='var(--rd)';}}
+  } catch(e){if(st){st.textContent='❌ '+e.message;st.style.color='var(--rd)';}}
+}
+
+// ════════════════════════════════════════════════
+// CALL CLAUDE — via proxy (sin CORS)
+// ════════════════════════════════════════════════
+async function callClaude({ messages, max_tokens = 2000, tools = null }) {
+  const key = getApiKey();
+  if (!key) throw new Error('⚠ No hay API key. Pégala en la pestaña "🤖 API Key" del formulario (sk-ant-api03-...)');
+
+  const body = { model: 'claude-sonnet-4-20250514', max_tokens, messages };
+  if (tools) body.tools = tools;
+
+  const res = await fetch(getProxyUrl(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Anthropic-Key': key,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try { const errBody = await res.json(); errMsg = errBody?.error?.message || errMsg; } catch(e) {}
+    if (res.status === 401) throw new Error('API key inválida o expirada. Verifica en console.anthropic.com');
+    if (res.status === 403) throw new Error('API key sin permisos suficientes');
+    if (res.status === 429) throw new Error('Rate limit alcanzado. Espera unos segundos.');
+    throw new Error(`Error API: ${errMsg}`);
+  }
+
+  const data = await res.json();
+  let txt = '';
+  for (const b of data.content) { if (b.type === 'text') txt += b.text; }
+  return { data, txt };
+}
+
+// ════════════════════════════════════════════════
+// THEME TOGGLE — dark / light
+// ════════════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  const btn=$('btn-theme');
+  if(btn)btn.textContent=isLight?'🌑':'🌙';
+  localStorage.setItem('zinto_theme',isLight?'light':'dark');
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+// Restore theme
+(function(){
+  const t=localStorage.getItem('zinto_theme');
+  if(t==='light'){document.body.classList.add('light');const b=$('btn-theme');if(b)b.textContent='🌑';}
+})();
+// Load saved API key
+const _savedKey = getApiKey(); if (_savedKey) { const _inp = $('api-key-mo'); if(_inp) _inp.value = _savedKey; }
+renderDash();
+</script>
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox(event)">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <div id="lightbox-img-container" style="max-width:90vw;max-height:78vh;width:900px;height:600px;background-size:contain;background-position:center;background-repeat:no-repeat;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)"></div>
+  <img id="lightbox-img" src="" alt="" style="display:none"/>
+  <div id="lightbox-info"></div>
+  <div id="lightbox-nav">
+    <button onclick="lightboxStep(-1);event.stopPropagation()">← Anterior</button>
+    <span id="lightbox-pos" style="font-family:var(--mo);font-size:10px;color:var(--t3)">1 / 1</span>
+    <button onclick="lightboxStep(1);event.stopPropagation()">Siguiente →</button>
+  </div>
+  <div id="lightbox-url" onclick="copyUrlLb(event)">Clic para copiar URL</div>
+  <button id="lightbox-sel-btn" onclick="toggleExtImg(lbIdx);event.stopPropagation()">☑ Seleccionar / Deseleccionar</button>
+</div>
+
+</body>
+</html>
