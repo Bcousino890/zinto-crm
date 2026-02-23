@@ -1504,14 +1504,25 @@ async function downloadSel() {
   const sel = extImages.filter((_,i)=>selImgs.has(i));
   if (!sel.length) { showToast('⚠ Selecciona al menos una imagen'); return; }
   showToast(`⬇ Descargando ${sel.length} imágenes…`);
+  const IMG_PROXY = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
+  let ok = 0;
   for (const img of sel) {
     try {
-      const a = document.createElement('a'); a.href = img.url; a.download = img.filename; a.target='_blank';
+      // Fetch via proxy → blob URL → mismo origen → download funciona
+      const res = await fetch(IMG_PROXY + encodeURIComponent(img.url));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = img.filename || ('imagen_' + (ok+1) + '.jpg');
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      await new Promise(r=>setTimeout(r,280));
-    } catch(e){}
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
+      ok++;
+      await new Promise(r => setTimeout(r, 350));
+    } catch(e) { console.warn('⚠ Download failed:', img.url, e); }
   }
-  showToast(`✓ ${sel.length} imágenes descargadas`);
+  showToast(`✓ ${ok} de ${sel.length} imágenes descargadas`);
 }
 
 function useExtInProp() {
