@@ -340,11 +340,11 @@ body.light .paste-a{background:var(--s2);color:var(--t2)}
       <input type="file" accept="image/*" style="display:none" onchange="uploadBrandLogo(this)">
     </label>
     <input class="fi" id="bcp-name" placeholder="Nombre empresa" style="font-size:9px;margin-bottom:4px"
-      value="Benjamín Cousiño Propiedades" oninput="saveBrand()">
+      oninput="saveBrand()">
     <input class="fi" id="bcp-email" placeholder="Email" style="font-size:9px;margin-bottom:4px"
-      value="contacto@bcousinoprop.com" oninput="saveBrand()">
+      oninput="saveBrand()">
     <input class="fi" id="bcp-web" placeholder="Web" style="font-size:9px"
-      value="www.bcousinoprop.com" oninput="saveBrand()">
+      oninput="saveBrand()">
   </div>
 </aside>
 
@@ -994,6 +994,7 @@ function loadBrand() {
   _applyLogoPreview(logo);
 }
 function saveBrand() {
+  // bcp_logo se guarda en uploadBrandLogo (no en oninput)
   localStorage.setItem('bcp_name', $('bcp-name')?.value || '');
   localStorage.setItem('bcp_email', $('bcp-email')?.value || '');
   localStorage.setItem('bcp_web', $('bcp-web')?.value || '');
@@ -1003,10 +1004,15 @@ function uploadBrandLogo(input) {
   const reader = new FileReader();
   reader.onload = e => {
     const b64 = e.target.result;
-    localStorage.setItem('bcp_logo', b64);
-    _applyLogoPreview(b64);
-    showToast('✓ Logo guardado');
+    try {
+      localStorage.setItem('bcp_logo', b64);
+      _applyLogoPreview(b64);
+      showToast('✓ Logo guardado');
+    } catch(e) {
+      showToast('✗ Logo demasiado grande para guardar');
+    }
   };
+  reader.onerror = () => showToast('✗ Error al leer imagen');
   reader.readAsDataURL(file);
 }
 function _applyLogoPreview(b64) {
