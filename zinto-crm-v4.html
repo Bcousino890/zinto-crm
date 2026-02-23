@@ -1460,7 +1460,7 @@ function renderExtGrid(result) {
     const im = document.createElement('img');
     im.alt = img.filename;
     im.loading = 'lazy';
-    im.src = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=' + encodeURIComponent(img.url);
+    im.src = IMG_PROXY + encodeURIComponent(img.url);
     im.onerror = function() {
       this.style.opacity = '.15';
     };
@@ -1528,7 +1528,7 @@ function showLightboxAt(i) {
   const lbUrl = document.getElementById('lightbox-url');
   // Load via corsproxy (server-side fetch, sin Referer)
   const lbContainer = document.getElementById('lightbox-img-container');
-  const proxyHq = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=' + encodeURIComponent(img.url);
+  const proxyHq = IMG_PROXY + encodeURIComponent(img.url);
   lbImg.style.display = 'block';
   lbImg.style.opacity = '0.4';
   lbImg.onload = () => { lbImg.style.opacity = '1'; };
@@ -2195,7 +2195,7 @@ function generatePropPDF(propId) {
 
   // Datos
   const precio = Number(p.pr || 0).toLocaleString('es-ES');
-  const precioStr = `€${precio}${p.op === 'Alquiler' ? '/mes' : ''}`;
+  const precioStr = `€${precio}${esc(p.op) === 'Alquiler' ? '/mes' : ''}`;
   const ubicacion = [p.via ? p.via + (p.num ? ' ' + p.num : '') : '', p.barrio, p.loc].filter(Boolean).join(' · ');
   const planta = p.planta && p.planta !== 'Selecciona' ? p.planta : '';
   const extras = [
