@@ -1043,6 +1043,7 @@ let props=(_saved&&_saved.props)||[];
 let leads=(_saved&&_saved.leads)||[];
 let pendingImport=[],showAg=false,leadFilter='todos';
 let extImages=[],selImgs=new Set(),propImgs=[];
+const IMG_PROXY='https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
 
 function rndDate(){const d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*14));d.setHours(Math.floor(Math.random()*12)+8,Math.floor(Math.random()*60));return d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 
@@ -1573,7 +1574,6 @@ async function downloadSel() {
   const sel = extImages.filter((_,i)=>selImgs.has(i));
   if (!sel.length) { showToast('⚠ Selecciona al menos una imagen'); return; }
   showToast(`⬇ Descargando ${sel.length} imágenes…`);
-  const IMG_PROXY = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
   let ok = 0;
   for (const img of sel) {
     try {
@@ -2204,18 +2204,18 @@ function generatePropPDF(propId) {
     ...(p.extras || []),
     ...(p.orient || []),
   ].filter(Boolean);
-  const IMG_PROXY = 'https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
   const foto = p.images && p.images[0] ? IMG_PROXY + encodeURIComponent(p.images[0]) : '';
-  const desc = esc(p.desc || '').replace(/\n/g, '<br>');
+  const desc = esc(p.desc || '').replace(/\n/g, '<br>'); // escape before <br> - order matters
 
-  // Logo HTML
-  const logoHtml = brand.logo
-    ? `<img src="${brand.logo}" style="max-height:38px;max-width:140px;object-fit:contain" alt="logo">`
+  // Logo HTML — validate data URI to prevent javascript: injection
+  const safeLogo = brand.logo && brand.logo.startsWith('data:image/') ? brand.logo : '';
+  const logoHtml = safeLogo
+    ? `<img src="${safeLogo}" style="max-height:38px;max-width:140px;object-fit:contain" alt="logo">`
     : `<span style="font-size:13px;font-weight:700;color:#0d1a26;letter-spacing:-.3px">${esc(brand.name)}</span>`;
 
-  // Foto HTML
+  // Foto HTML — double quotes in url() prevent single-quote CSS injection
   const fotoHtml = foto
-    ? `<div class="hero" style="background-image:url('${foto}')"></div>`
+    ? `<div class="hero" style="background-image:url(&quot;${foto}&quot;)"></div>`
     : `<div class="hero hero-empty"><span>${esc(brand.name)}</span></div>`;
 
   // Chips
