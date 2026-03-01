@@ -4,6 +4,8 @@ const app = express();
 const PORT = 3001;
 
 app.use((req, res, next) => {
+  // NOTE: Wildcard CORS is intentional for local dev — this server should never be
+  // exposed to the internet (run on localhost only). Restrict to specific origin in production.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

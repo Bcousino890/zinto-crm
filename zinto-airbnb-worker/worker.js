@@ -42,6 +42,20 @@ function extractImagesFromText(text) {
     }));
 }
 
+function extractProperty(data) {
+  try {
+    const str = typeof data === 'string' ? data : JSON.stringify(data);
+    const titleMatch = str.match(/"name"\s*:\s*"([^"]{5,80})"/);
+    const priceMatch = str.match(/"price"\s*:\s*(\d+)/);
+    return {
+      title: titleMatch ? titleMatch[1] : '',
+      price: priceMatch ? parseInt(priceMatch[1]) : 0
+    };
+  } catch (e) {
+    return {};
+  }
+}
+
 async function scrapeAirbnb(browserBinding, listingUrl) {
   let browser;
   try {
@@ -61,7 +75,7 @@ async function scrapeAirbnb(browserBinding, listingUrl) {
       }
       // Priority 2: current Airbnb 2024+ element
       const deferred = document.querySelector('[id^="data-deferred-state"]');
-      if (deferred) {
+      if (deferred && deferred.textContent.includes('muscache')) {
         try { return { data: JSON.parse(deferred.textContent), source: 'deferred' }; } catch (e) {}
         return { data: deferred.textContent, source: 'deferred-text' };
       }
@@ -93,7 +107,8 @@ async function scrapeAirbnb(browserBinding, listingUrl) {
       }
     }
 
-    return { listingUrl, images, property: {}, status: 'ok', error: null };
+    const property = scraped ? extractProperty(scraped.data) : {};
+    return { listingUrl, images, property, status: 'ok', error: null };
   } catch (err) {
     return { listingUrl, images: [], property: {}, status: 'error', error: err.message };
   } finally {

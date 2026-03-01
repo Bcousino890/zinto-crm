@@ -2508,7 +2508,7 @@ async function doAirbnbBatch() {
 
   const urls = raw.split('\n')
     .map(u => u.trim())
-    .filter(u => u.startsWith('http'));
+    .filter(u => u.startsWith('http') && u.includes('airbnb.'));
 
   if (urls.length === 0) { showToast('No se detectaron URLs validas'); return; }
   if (urls.length > 30) { showToast('Maximo 30 URLs por extraccion'); return; }
