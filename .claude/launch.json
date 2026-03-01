@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "CRM (static)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8080"],
+      "port": 8080
+    },
+    {
+      "name": "Cloudflare Worker (zinto-claude-proxy)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--config", "zinto-claude-proxy/wrangler.toml"],
+      "port": 8787
+    },
+    {
+      "name": "Airbnb Puppeteer Server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["zinto-puppeteer-server/server.js"],
+      "port": 3001
+    }
+  ]
+}
