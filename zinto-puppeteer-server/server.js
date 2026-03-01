@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const PORT = 3001;
 
-app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -10,6 +9,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', backend: 'local-puppeteer' });
