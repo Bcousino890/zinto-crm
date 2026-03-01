@@ -1,0 +1,7 @@
+{
+  "name": "zinto-airbnb-worker",
+  "version": "1.0.0",
+  "dependencies": {
+    "@cloudflare/puppeteer": "^0.0.5"
+  }
+}

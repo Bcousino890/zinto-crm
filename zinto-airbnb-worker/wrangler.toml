@@ -1,0 +1,8 @@
+name = "zinto-airbnb-scraper"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "bdff58d4a8d372fe02101f5259bd16b8"
+
+[browser]
+binding = "BROWSER"
