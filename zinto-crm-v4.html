@@ -428,6 +428,9 @@ body.light .paste-a{background:var(--s2);color:var(--t2)}
           <div class="af-tab" id="etab-api" onclick="switchExtTab('api')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
             🤖 Extraer con API IA<br><span style="font-size:7.5px;opacity:.7">Requiere API key propia</span>
           </div>
+          <div class="af-tab" id="etab-airbnb" onclick="switchExtTab('airbnb')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
+            🏠 Airbnb Batch<br><span style="font-size:7.5px;opacity:.7">Sin IA · Puppeteer</span>
+          </div>
         </div>
 
         <!-- PASTE MODE -->
@@ -471,6 +474,36 @@ Se normalizarán automáticamente según la fuente."></textarea>
             </div>
             <div class="url-st" id="ext-st-api"></div>
             <div class="pb" id="ext-pb" style="display:none"><div class="pf" id="ext-pf"></div></div>
+          </div>
+        </div>
+
+        <!-- AIRBNB BATCH MODE -->
+        <div id="ext-airbnb-mode" style="display:none">
+          <div id="airbnb-backend-st" style="font-family:var(--mo);font-size:8.5px;margin-bottom:10px;padding:6px 10px;border-radius:6px;background:var(--b1)">
+            Detectando backend...
+          </div>
+          <div style="font-family:var(--mo);font-size:8px;color:var(--t3);margin-bottom:6px">
+            Pega las URLs de Airbnb, una por linea (max 30):
+          </div>
+          <textarea class="fi" id="airbnb-urls" style="min-height:120px;font-size:9.5px;font-family:var(--mo);line-height:1.7;margin-bottom:8px" placeholder="https://www.airbnb.es/rooms/123456&#10;https://www.airbnb.es/rooms/789012"></textarea>
+          <button class="btn bp" onclick="doAirbnbBatch()" id="btn-airbnb" style="width:100%">🏠 Extraer Imagenes</button>
+          <div class="pb" id="airbnb-pb" style="display:none;margin-top:8px"><div class="pf" id="airbnb-pf"></div></div>
+          <div id="airbnb-progress-list" style="font-family:var(--mo);font-size:8.5px;color:var(--t3);margin-top:8px;line-height:2"></div>
+          <div id="airbnb-results-wrap" style="display:none;margin-top:14px">
+            <div style="font-family:var(--mo);font-size:9px;color:var(--t4);margin-bottom:8px">
+              <span id="airbnb-total-cnt" style="color:var(--ac);font-size:16px;font-weight:800">0</span> imagenes totales ·
+              <span id="airbnb-listing-cnt" style="color:var(--t3)">0 anuncios</span>
+            </div>
+            <div id="airbnb-accordion"></div>
+            <div style="margin-top:12px;border-top:1px solid var(--b1);padding-top:12px">
+              <div style="font-family:var(--mo);font-size:8.5px;color:var(--t4);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span>Grid unificado</span>
+                <button class="btn bg bs" onclick="airbnbSelAll()">Todas</button>
+                <button class="btn bg bs" onclick="airbnbSelNone()">Ninguna</button>
+                <button class="btn bp bs" onclick="downloadAirbnbSel()">Descargar sel.</button>
+              </div>
+              <div class="img-grid-ext" id="airbnb-unified-grid"></div>
+            </div>
           </div>
         </div>
 
@@ -1044,6 +1077,7 @@ let leads=(_saved&&_saved.leads)||[];
 let pendingImport=[],showAg=false,leadFilter='todos';
 let extImages=[],selImgs=new Set(),propImgs=[];
 const IMG_PROXY='https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
+const AIRBNB_CF_WORKER = 'https://zinto-airbnb-scraper.benjamincousino1.workers.dev';
 
 function rndDate(){const d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*14));d.setHours(Math.floor(Math.random()*12)+8,Math.floor(Math.random()*60));return d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 
