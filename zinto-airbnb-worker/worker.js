@@ -114,7 +114,9 @@ export default {
     }
 
     if (url.pathname === '/airbnb/extract' && request.method === 'POST') {
-      const body = await request.json();
+      let body;
+      try { body = await request.json(); }
+      catch { return Response.json({ error: 'Invalid JSON body' }, { status: 400, headers: CORS }); }
       const urls = body.urls;
       if (!Array.isArray(urls) || urls.length === 0) {
         return Response.json({ error: 'urls[] requerido' }, { status: 400, headers: CORS });
