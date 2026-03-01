@@ -1405,6 +1405,13 @@ function normalizeImgUrls(images, source) {
       url = url.replace(/\/thumb\/[^/]+\/\d+_\d+\//g, '/image/');
     }
 
+    if (source === 'airbnb') {
+      if (!url.includes('muscache.com')) return null;
+      if (/avatar|user|profile/i.test(url)) return null;
+      url = url.replace(/[?&]im_w=\d+/g, '').replace(/[?&]aki_policy=[^&]+/g, '');
+      url = url + (url.includes('?') ? '&' : '?') + 'im_w=1200';
+    }
+
     if (seen.has(url)) return null;
     seen.add(url);
     return { ...img, url };
@@ -2420,17 +2427,312 @@ function switchAfTab(mode) {
 }
 
 function switchExtTab(mode) {
-  ['etab-paste','etab-api'].forEach(id => {
+  ['etab-paste','etab-api','etab-airbnb'].forEach(id => {
     const t = $(id);
     if (!t) return;
     t.style.background = '';
     t.style.color = 'var(--t4)';
     t.style.borderColor = 'var(--b1)';
   });
-  const at = mode === 'paste' ? $('etab-paste') : $('etab-api');
-  if (at) { at.style.background = 'var(--acd)'; at.style.color = 'var(--ac)'; at.style.borderColor = 'rgba(0,212,160,.3)'; }
+  const tabId = mode === 'paste' ? 'etab-paste' : mode === 'api' ? 'etab-api' : 'etab-airbnb';
+  const at = $(tabId);
+  if (at) {
+    at.style.background = 'var(--acd)';
+    at.style.color = 'var(--ac)';
+    at.style.borderColor = 'rgba(0,212,160,.3)';
+  }
   $('ext-paste-mode').style.display = mode === 'paste' ? 'block' : 'none';
   $('ext-api-mode').style.display = mode === 'api' ? 'block' : 'none';
+  $('ext-airbnb-mode').style.display = mode === 'airbnb' ? 'block' : 'none';
+  if (mode === 'airbnb') checkAirbnbBackend();
+}
+
+// ════════════════════════════════════════════════
+// AIRBNB BATCH EXTRACTOR
+// ════════════════════════════════════════════════
+let airbnbBackendUrl = null;
+let airbnbAllImages = [];
+let airbnbSelSet = new Set();
+
+async function checkAirbnbBackend() {
+  const st = $('airbnb-backend-st');
+  if (!st) return;
+  st.textContent = 'Detectando backend...';
+  st.style.background = 'var(--b1)';
+  st.style.color = 'var(--t4)';
+
+  // Intentar server local primero
+  try {
+    const res = await Promise.race([
+      fetch('http://localhost:3001/health'),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 800))
+    ]);
+    if (res.ok) {
+      airbnbBackendUrl = 'http://localhost:3001';
+      st.textContent = 'Servidor local activo (Puppeteer)';
+      st.style.background = 'rgba(0,212,160,.1)';
+      st.style.color = 'var(--ac)';
+      return;
+    }
+  } catch (_) {}
+
+  // Fallback CF Worker
+  try {
+    const res2 = await fetch(AIRBNB_CF_WORKER + '/health');
+    if (res2.ok) {
+      airbnbBackendUrl = AIRBNB_CF_WORKER;
+      st.textContent = 'CF Worker activo (fallback)';
+      st.style.background = 'rgba(255,200,0,.1)';
+      st.style.color = '#b8900a';
+      return;
+    }
+  } catch (_) {}
+
+  airbnbBackendUrl = null;
+  st.textContent = 'Sin backend — inicia: node zinto-puppeteer-server/server.js';
+  st.style.background = 'rgba(255,0,80,.08)';
+  st.style.color = '#cc0040';
+}
+
+async function doAirbnbBatch() {
+  if (!airbnbBackendUrl) {
+    await checkAirbnbBackend();
+    if (!airbnbBackendUrl) {
+      showToast('Sin backend disponible. Inicia el server local.');
+      return;
+    }
+  }
+
+  const raw = ($('airbnb-urls') || {value:''}).value.trim();
+  if (!raw) { showToast('Pega al menos una URL de Airbnb'); return; }
+
+  const urls = raw.split('\n')
+    .map(u => u.trim())
+    .filter(u => u.startsWith('http'));
+
+  if (urls.length === 0) { showToast('No se detectaron URLs validas'); return; }
+  if (urls.length > 30) { showToast('Maximo 30 URLs por extraccion'); return; }
+
+  const btn = $('btn-airbnb');
+  btn.disabled = true;
+  btn.textContent = 'Extrayendo ' + urls.length + ' anuncios...';
+  $('airbnb-pb').style.display = 'block';
+  $('airbnb-results-wrap').style.display = 'none';
+  airbnbAllImages = [];
+  airbnbSelSet = new Set();
+
+  // Mostrar lista de progreso
+  const pl = $('airbnb-progress-list');
+  pl.textContent = '';
+  urls.forEach((u, i) => {
+    const id = u.split('/').filter(Boolean).pop();
+    const row = document.createElement('div');
+    row.id = 'aprog-' + i;
+    row.textContent = 'Pendiente: ' + id;
+    pl.appendChild(row);
+  });
+
+  progAnim('airbnb-pf', 85, urls.length * 4000);
+
+  try {
+    const res = await fetch(airbnbBackendUrl + '/airbnb/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls })
+    });
+    const data = await res.json();
+
+    (data.results || []).forEach((r, i) => {
+      const el = $('aprog-' + i);
+      if (!el) return;
+      const id = r.listingUrl.split('/').filter(Boolean).pop();
+      el.textContent = (r.status === 'ok' ? 'OK' : 'Error') + ': ' + id +
+        (r.status === 'ok' ? ' · ' + r.images.length + ' fotos' : ' · ' + (r.error || ''));
+    });
+
+    progAnim('airbnb-pf', 100, 300);
+    setTimeout(() => { $('airbnb-pb').style.display = 'none'; }, 700);
+    renderAirbnbResults(data.results || []);
+  } catch (e) {
+    showToast('Error: ' + e.message);
+    $('airbnb-pb').style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Extraer Imagenes';
+  }
+}
+
+function renderAirbnbResults(results) {
+  window._airbnbResults = results;
+  const accordion = $('airbnb-accordion');
+  accordion.textContent = '';
+  airbnbAllImages = [];
+  airbnbSelSet = new Set();
+
+  results.forEach((r, ri) => {
+    const id = r.listingUrl.split('/').filter(Boolean).pop();
+    const title = (r.property && r.property.title) ? r.property.title : 'rooms/' + id;
+
+    (r.images || []).forEach(img => airbnbAllImages.push({ img }));
+
+    // Cabecera del acordeon
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--b1);border-radius:7px;margin-bottom:8px;overflow:hidden';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:var(--b1);font-family:var(--mo);font-size:9px;gap:8px';
+
+    const arrowSpan = document.createElement('span');
+    arrowSpan.id = 'acc-arrow-' + ri;
+    arrowSpan.textContent = '▶ ';
+
+    const titleSpan = document.createElement('span');
+    const statusMark = r.status === 'ok' ? 'OK' : 'Error';
+    titleSpan.textContent = statusMark + ' ' + title + ' · ' + (r.images || []).length + ' fotos';
+
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn bg bs';
+    dlBtn.style.fontSize = '8px';
+    dlBtn.textContent = 'Descargar anuncio';
+    dlBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      downloadListingImages(ri);
+    });
+
+    const leftWrap = document.createElement('span');
+    leftWrap.appendChild(arrowSpan);
+    leftWrap.appendChild(titleSpan);
+    header.appendChild(leftWrap);
+    header.appendChild(dlBtn);
+    header.addEventListener('click', () => toggleAirbnbAccordion(ri));
+
+    // Cuerpo del acordeon
+    const body = document.createElement('div');
+    body.id = 'acc-body-' + ri;
+    body.style.cssText = 'display:none;padding:10px';
+
+    if (r.status === 'error') {
+      const errMsg = document.createElement('div');
+      errMsg.style.cssText = 'color:#cc0040;font-family:var(--mo);font-size:9px';
+      errMsg.textContent = 'Error: ' + (r.error || 'desconocido');
+      body.appendChild(errMsg);
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'img-grid-ext';
+      (r.images || []).forEach(img => {
+        const th = document.createElement('div');
+        th.className = 'img-th';
+        const im = document.createElement('img');
+        im.alt = img.filename;
+        im.loading = 'lazy';
+        im.src = IMG_PROXY + encodeURIComponent(img.url);
+        im.onerror = function() { this.style.opacity = '.15'; };
+        const lbl = document.createElement('div');
+        lbl.className = 'img-th-n';
+        lbl.textContent = '#' + img.n;
+        th.appendChild(im);
+        th.appendChild(lbl);
+        grid.appendChild(th);
+      });
+      body.appendChild(grid);
+    }
+
+    card.appendChild(header);
+    card.appendChild(body);
+    accordion.appendChild(card);
+  });
+
+  renderAirbnbUnifiedGrid();
+
+  set('airbnb-total-cnt', airbnbAllImages.length);
+  set('airbnb-listing-cnt', results.filter(r => r.status === 'ok').length + ' anuncios');
+  $('airbnb-results-wrap').style.display = 'block';
+}
+
+function toggleAirbnbAccordion(ri) {
+  const body = $('acc-body-' + ri);
+  const arrow = $('acc-arrow-' + ri);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▶ ' : '▼ ';
+}
+
+function renderAirbnbUnifiedGrid() {
+  const grid = $('airbnb-unified-grid');
+  grid.textContent = '';
+  airbnbAllImages.forEach(({ img }, i) => {
+    const th = document.createElement('div');
+    th.className = 'img-th' + (airbnbSelSet.has(i) ? ' sel' : '');
+    th.dataset.idx = i;
+    const im = document.createElement('img');
+    im.alt = img.filename;
+    im.loading = 'lazy';
+    im.src = IMG_PROXY + encodeURIComponent(img.url);
+    im.onerror = function() { this.style.opacity = '.15'; };
+    const lbl = document.createElement('div');
+    lbl.className = 'img-th-n';
+    lbl.textContent = '#' + (i + 1);
+    const ck = document.createElement('div');
+    ck.className = 'sel-ck';
+    ck.textContent = 'sel';
+    th.appendChild(im);
+    th.appendChild(lbl);
+    th.appendChild(ck);
+    th.addEventListener('dblclick', e => { toggleAirbnbImg(i); e.stopPropagation(); });
+    grid.appendChild(th);
+  });
+}
+
+function toggleAirbnbImg(i) {
+  if (airbnbSelSet.has(i)) airbnbSelSet.delete(i);
+  else airbnbSelSet.add(i);
+  const th = document.querySelector('#airbnb-unified-grid .img-th[data-idx="' + i + '"]');
+  if (th) th.classList.toggle('sel', airbnbSelSet.has(i));
+}
+
+function airbnbSelAll() {
+  airbnbAllImages.forEach((_, i) => airbnbSelSet.add(i));
+  document.querySelectorAll('#airbnb-unified-grid .img-th').forEach(t => t.classList.add('sel'));
+}
+
+function airbnbSelNone() {
+  airbnbSelSet.clear();
+  document.querySelectorAll('#airbnb-unified-grid .img-th').forEach(t => t.classList.remove('sel'));
+}
+
+async function downloadAirbnbSel() {
+  const selected = airbnbAllImages.filter((_, i) => airbnbSelSet.has(i));
+  if (selected.length === 0) { showToast('Selecciona imagenes primero (doble clic)'); return; }
+  for (const { img } of selected) {
+    try {
+      const r = await fetch(IMG_PROXY + encodeURIComponent(img.url));
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = img.filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (_) {}
+  }
+}
+
+async function downloadListingImages(ri) {
+  const r = window._airbnbResults && window._airbnbResults[ri];
+  if (!r || !r.images) return;
+  for (const img of r.images) {
+    try {
+      const res = await fetch(IMG_PROXY + encodeURIComponent(img.url));
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = img.filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (_) {}
+  }
 }
 
 // ════════════════════════════════════════════════
