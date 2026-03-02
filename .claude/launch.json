@@ -18,6 +18,13 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["zinto-puppeteer-server/server.js"],
       "port": 3001
+    },
+    {
+      "name": "zinto-scraper-server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "cwd": "${workspaceFolder}/zinto-scraper-server",
+      "port": 3001
     }
   ]
 }

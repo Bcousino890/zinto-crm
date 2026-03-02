@@ -431,6 +431,9 @@ body.light .paste-a{background:var(--s2);color:var(--t2)}
           <div class="af-tab" id="etab-airbnb" onclick="switchExtTab('airbnb')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
             🏠 Airbnb Batch<br><span style="font-size:7.5px;opacity:.7">Sin IA · Puppeteer</span>
           </div>
+          <div class="af-tab" id="etab-idealista" onclick="switchExtTab('idealista')" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--b1);color:var(--t4);font-family:var(--mo);font-size:8.5px;text-align:center;cursor:pointer">
+            🏘 Idealista<br><span style="font-size:7.5px;opacity:.7">Maps · Valoración</span>
+          </div>
         </div>
 
         <!-- PASTE MODE -->
@@ -504,6 +507,24 @@ Se normalizarán automáticamente según la fuente."></textarea>
               </div>
               <div class="img-grid-ext" id="airbnb-unified-grid"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- ===== PANEL: Idealista Maps Enrich ===== -->
+        <div id="ext-idealista-mode" style="display:none">
+          <div id="idl-server-status" style="margin-bottom:10px;padding:8px;border-radius:6px;font-size:11px;background:#f3f4f6;color:#6b7280">
+            Verificando servidor local...
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:9px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">URL de idealista.com/maps</div>
+            <div style="display:flex;gap:6px">
+              <input id="idl-url-input" type="text" placeholder="https://www.idealista.com/maps/madrid-madrid/..." style="flex:1;border:1px solid var(--b1);border-radius:6px;padding:6px 10px;font-size:11px;outline:none;font-family:var(--mo)" />
+              <button id="idl-enrich-btn" onclick="doIdealistaMapsEnrich()" style="padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mo)">Extraer</button>
+            </div>
+          </div>
+          <div id="idl-preview" style="display:none"></div>
+          <div id="idl-create-area" style="display:none;margin-top:10px">
+            <button onclick="createPropFromIdealista()" style="width:100%;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mo)">Crear Propiedad</button>
           </div>
         </div>
 
@@ -1078,6 +1099,7 @@ let pendingImport=[],showAg=false,leadFilter='todos';
 let extImages=[],selImgs=new Set(),propImgs=[];
 const IMG_PROXY='https://zinto-img-proxy.benjamincousino1.workers.dev/?url=';
 const AIRBNB_CF_WORKER = 'https://zinto-airbnb-scraper.benjamincousino1.workers.dev';
+const SCRAPER_URL = 'http://localhost:3001';
 
 function rndDate(){const d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*14));d.setHours(Math.floor(Math.random()*12)+8,Math.floor(Math.random()*60));return d.toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 
@@ -2427,14 +2449,14 @@ function switchAfTab(mode) {
 }
 
 function switchExtTab(mode) {
-  ['etab-paste','etab-api','etab-airbnb'].forEach(id => {
+  ['etab-paste','etab-api','etab-airbnb','etab-idealista'].forEach(id => {
     const t = $(id);
     if (!t) return;
     t.style.background = '';
     t.style.color = 'var(--t4)';
     t.style.borderColor = 'var(--b1)';
   });
-  const tabId = mode === 'paste' ? 'etab-paste' : mode === 'api' ? 'etab-api' : 'etab-airbnb';
+  const tabId = mode === 'paste' ? 'etab-paste' : mode === 'api' ? 'etab-api' : mode === 'idealista' ? 'etab-idealista' : 'etab-airbnb';
   const at = $(tabId);
   if (at) {
     at.style.background = 'var(--acd)';
@@ -2444,7 +2466,9 @@ function switchExtTab(mode) {
   $('ext-paste-mode').style.display = mode === 'paste' ? 'block' : 'none';
   $('ext-api-mode').style.display = mode === 'api' ? 'block' : 'none';
   $('ext-airbnb-mode').style.display = mode === 'airbnb' ? 'block' : 'none';
+  $('ext-idealista-mode').style.display = mode === 'idealista' ? 'block' : 'none';
   if (mode === 'airbnb') checkAirbnbBackend();
+  if (mode === 'idealista') checkIdealistaBackend();
 }
 
 // ════════════════════════════════════════════════
@@ -2733,6 +2757,135 @@ async function downloadListingImages(ri) {
       await new Promise(resolve => setTimeout(resolve, 200));
     } catch (_) {}
   }
+}
+
+// ════════════════════════════════════════════════
+// IDEALISTA MAPS ENRICHMENT
+let _idealistaData = null;
+
+async function checkIdealistaBackend() {
+  const banner = document.getElementById('idl-server-status');
+  try {
+    const r = await fetch(SCRAPER_URL + '/health', { signal: AbortSignal.timeout(3000) });
+    const j = await r.json();
+    banner.style.background = '#f0fdf4';
+    banner.style.color = '#15803d';
+    banner.textContent = 'Servidor local activo (' + (j.backend || 'ok') + ')';
+  } catch (e) {
+    banner.style.background = '#fef2f2';
+    banner.style.color = '#dc2626';
+    banner.textContent = 'Servidor local no disponible - inicia zinto-scraper-server en puerto 3001';
+  }
+}
+
+async function doIdealistaMapsEnrich() {
+  const url = document.getElementById('idl-url-input').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('idl-enrich-btn');
+  const preview = document.getElementById('idl-preview');
+  const createArea = document.getElementById('idl-create-area');
+  btn.disabled = true;
+  btn.textContent = 'Extrayendo...';
+  preview.style.display = 'none';
+  createArea.style.display = 'none';
+  _idealistaData = null;
+  try {
+    const r = await fetch(SCRAPER_URL + '/idealista/maps-enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await r.json();
+    if (!r.ok || data.status !== 'ok') throw new Error(data.error || 'Error desconocido');
+    _idealistaData = data;
+    renderIdealistaPreview(data);
+    preview.style.display = 'block';
+    createArea.style.display = 'block';
+  } catch (err) {
+    preview.style.display = 'block';
+    preview.style.color = '#dc2626';
+    preview.style.fontSize = '11px';
+    preview.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Extraer';
+  }
+}
+
+function renderIdealistaPreview(data) {
+  const preview = document.getElementById('idl-preview');
+  const p = data.property;
+  const v = data.valuation;
+  preview.style.background = '#f9fafb';
+  preview.style.border = '1px solid var(--b1)';
+  preview.style.borderRadius = '6px';
+  preview.style.padding = '10px';
+  preview.style.fontSize = '11px';
+  preview.textContent = '';
+  const rows = [
+    ['Direccion', p.address],
+    ['Tipo', p.type],
+    ['m2 vivienda', p.m2_vivienda],
+    ['m2 construidos', p.m2_construidos],
+    ['Habitaciones', p.rooms],
+    ['Banos', p.bathrooms],
+    ['Anno construccion', p.year],
+    ['Ascensor', p.elevator ? 'Si' : 'No'],
+    ['Calidad', p.construction_quality],
+    ['Ref. catastral', p.cadastral_ref],
+    ['Precio venta est.', v.sale && v.sale.estimate ? v.sale.estimate.toLocaleString('es-ES') + ' EUR' : null],
+    ['Rango venta', (v.sale && v.sale.min && v.sale.max) ? v.sale.min.toLocaleString('es-ES') + ' - ' + v.sale.max.toLocaleString('es-ES') + ' EUR' : null],
+    ['Alquiler est.', v.rent && v.rent.estimate ? v.rent.estimate.toLocaleString('es-ES') + ' EUR/mes' : null],
+    ['Rango alquiler', (v.rent && v.rent.min && v.rent.max) ? v.rent.min.toLocaleString('es-ES') + ' - ' + v.rent.max.toLocaleString('es-ES') + ' EUR/mes' : null],
+  ];
+  rows.forEach(function(pair) {
+    var label = pair[0]; var value = pair[1];
+    if (!value && value !== 0) return;
+    var row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.gap = '8px';
+    row.style.marginBottom = '2px';
+    var lEl = document.createElement('span');
+    lEl.style.fontWeight = '600';
+    lEl.style.color = '#6b7280';
+    lEl.style.width = '130px';
+    lEl.style.flexShrink = '0';
+    lEl.textContent = label;
+    var vEl = document.createElement('span');
+    vEl.style.color = '#111827';
+    vEl.textContent = value;
+    row.appendChild(lEl);
+    row.appendChild(vEl);
+    preview.appendChild(row);
+  });
+}
+
+function createPropFromIdealista() {
+  if (!_idealistaData) return;
+  var p = _idealistaData.property;
+  var v = _idealistaData.valuation;
+  var newProp = {
+    id: Date.now(), cId: null,
+    tipo: p.type || 'piso', op: 'venta', ta: null,
+    loc: 'Madrid', via: p.address || '', num: '',
+    planta: '', puerta: '', barrio: '',
+    m2: p.m2_construidos || p.m2_vivienda || 0,
+    m2u: p.m2_vivienda || 0,
+    h: p.rooms || 0, b: p.bathrooms || 0,
+    est: 'disponible', fc: p.year ? String(p.year) : '',
+    asc: p.elevator ? 'si' : 'no',
+    eq: '', cal: '', en: '',
+    extras: p.construction_quality ? 'Calidad: ' + p.construction_quality : '',
+    orient: '',
+    pr: (v.sale && v.sale.estimate) ? v.sale.estimate : 0,
+    ref: p.cadastral_ref || '', desc: '',
+    urlP: _idealistaData.url, em: '', tel: '',
+    images: [], fecha: new Date().toISOString().slice(0, 10),
+  };
+  props.push(newProp);
+  saveProps();
+  renderProps();
+  showToast('Propiedad creada desde Idealista');
 }
 
 // ════════════════════════════════════════════════
