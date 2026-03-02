@@ -49,8 +49,9 @@ function extractProperty(data) {
 }
 
 async function scrapeAirbnb(listingUrl) {
-  const page = await getPage();
+  let page = null;
   try {
+    page = await getPage();
     await page.setExtraHTTPHeaders({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     });
@@ -93,7 +94,7 @@ async function scrapeAirbnb(listingUrl) {
   } catch (err) {
     return { listingUrl, images: [], property: {}, status: 'error', error: err.message };
   } finally {
-    await page.close();
+    if (page) await page.close().catch(() => {});
   }
 }
 

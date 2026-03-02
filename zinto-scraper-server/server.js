@@ -45,6 +45,12 @@ app.post('/idealista/maps-enrich', async (req, res) => {
   }
 });
 
+// Global async error handler for Express
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ status: 'error', error: 'Internal server error' });
+});
+
 app.listen(PORT, () =>
   console.log('zinto-scraper-server en http://localhost:' + PORT)
 );

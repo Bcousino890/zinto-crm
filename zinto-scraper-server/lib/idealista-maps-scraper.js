@@ -20,8 +20,9 @@ async function scrapeIdealistaMaps(url) {
   if (elapsed < MIN_INTERVAL_MS) await sleep(MIN_INTERVAL_MS - elapsed);
   _lastIdealistaRequest = Date.now();
 
-  const page = await getPage();
+  let page = null;
   try {
+    page = await getPage();
     await humanDelay();
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
@@ -35,7 +36,7 @@ async function scrapeIdealistaMaps(url) {
     const html = await page.content();
     return parseIdealistaData(html, url);
   } finally {
-    await page.close();
+    if (page) await page.close().catch(() => {});
   }
 }
 
